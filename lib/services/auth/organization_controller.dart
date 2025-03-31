@@ -1,0 +1,152 @@
+import 'package:appwrite/appwrite.dart';
+import 'package:appwrite/models.dart';
+import 'package:flutter/cupertino.dart';
+import 'package:get/get.dart';
+import 'package:tellus/core/id.dart';
+import 'package:tellus/services/auth/auth_service.dart';
+
+class OrganizationController extends GetxController {
+  final Account account = Get.find<Account>();
+  final Databases databases = Get.find<Databases>();
+  final AuthService authService = Get.find<AuthService>();
+
+  String databaseId = CId.databaseId;
+  String orgsCollectionId = CId.orgsCollectionId;
+
+  RxString selectedOrg = ''.obs;
+  RxBool isLoading = false.obs;
+
+  TextEditingController orgTextController = TextEditingController();
+
+  /// Adds a new organization document to the organizations collection.
+  /// [orgName] is the name of the organization and [phoneNumbers] is the list of associated phone numbers.
+  /// Once the organization is created, it uses the returned organization ID (orgDocument.$id) to create a new user document in your user collection.
+  Future<Document?> addOrganization(
+    String orgName,
+    String phoneNumbers,
+    String userName,
+  ) async {
+    try {
+      // Create the organization document
+      final Document orgDocument = await databases.createDocument(
+        databaseId: databaseId,
+        collectionId: orgsCollectionId,
+        documentId: 'unique()', // auto-generate document ID
+        data: {
+          'orgName': orgName,
+          'phoneNumbers': phoneNumbers, // storing as string; adjust if needed
+        },
+      );
+      debugPrint('Organization created successfully: ${orgDocument.$id}');
+
+      // Create a new user document with admin role linked to the organization
+      final Document userDocument = await databases.createDocument(
+        databaseId: databaseId,
+        collectionId: CId.userCollectionId,
+        documentId: 'unique()', // auto-generate document ID
+        data: {
+          'name': userName,
+          'phoneNumber': phoneNumbers, // using the same phone number for admin
+          'organizationId': orgDocument.$id,
+          'role': 'admin',
+        },
+      );
+      debugPrint('Admin user created successfully for New Org: ${userDocument.$id}');
+      return orgDocument;
+    } catch (e) {
+      debugPrint('Error creating organization and admin user: $e');
+      return null;
+    }
+  }
+
+  /// each containing organization data (orgId, orgName, and phoneNumbers).
+  Future<List<Map<String, dynamic>>> getOrgs() async {
+    List<Map<String, dynamic>> orgList = [];
+    debugPrint('------ GET ORGANIZATION LIST ------');
+    isLoading.value = true;
+    try {
+      debugPrint('Fetching organization documents...');
+      final response = await databases.listDocuments(
+        databaseId: databaseId,
+        collectionId: orgsCollectionId,
+      );
+      debugPrint(
+        'Fetched ${response.documents.length} organization documents.',
+      );
+      for (Document doc in response.documents) {
+        // Build a map for each organization document.
+        Map<String, dynamic> orgData = {
+          'orgId': doc.$id,
+          'orgName': doc.data['orgName'],
+          'phoneNumbers': doc.data['phoneNumbers'],
+        };
+        orgList.add(orgData);
+      }
+    } catch (e) {
+      debugPrint('Error fetching organizations: $e');
+    } finally {
+      isLoading.value = false;
+    }
+    return orgList;
+  }
+
+  Future<List<Map<String, String>>> getOrgSuggestions(String query) async {
+    try {
+      // Fetch organizations from the Appwrite database
+      final documents = await databases.listDocuments(
+        databaseId: databaseId,
+        collectionId: orgsCollectionId,
+      );
+
+      // Extract organization names
+      List<Map<String, String>> orgList =
+          documents.documents
+              .map((doc) => {'name': doc.data['orgName'].toString()})
+              .toList();
+
+      // Filter based on query
+      return orgList
+          .where(
+            (org) => org['name']!.toLowerCase().contains(query.toLowerCase()),
+          )
+          .toList();
+    } catch (e) {
+      print('Error fetching organizations: $e');
+      return [];
+    }
+  }
+
+  Future<void> selectOrgAndNavigate(
+    TextEditingController orgTextController,
+  ) async {
+    isLoading.value = true;
+    debugPrint('----- phone value: ${orgTextController.value} -----');
+    try {
+      final response = await databases.listDocuments(
+        databaseId: databaseId,
+        collectionId: orgsCollectionId,
+        queries: [Query.equal('orgName', orgTextController.text)],
+      );
+
+      if (response.documents.isNotEmpty) {
+        // Organization found, navigate to login
+        final orgId = response.documents.first.$id;
+        if (orgId.isEmpty) {
+          throw Exception('Organization ID is missing. Please try again.');
+        }
+        selectedOrg.value = orgId;
+        Get.toNamed(
+          '/login',
+        );
+      } else {
+        // No matching organization found
+        Get.snackbar('Error', 'Organization not found');
+      }
+    } catch (e) {
+      Get.snackbar('Error', e.toString());
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
+}
