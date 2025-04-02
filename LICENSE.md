@@ -1,4 +1,4 @@
-Private Use License
+# Private Use License
 This is a legal agreement between you (the Licensee) and Tellus Group (the Licensor). By accessing, downloading, or using the Tellus code, you agree to the terms and conditions outlined below.
 
 1. Private Use Only
