@@ -26,7 +26,7 @@ class _PinputInputState extends State<PinputInput> {
     );
     return Pinput(
       controller: widget.pinController,
-      length: 6,
+      length: 4,
       defaultPinTheme: defaultPinTheme,
       hapticFeedbackType: HapticFeedbackType.lightImpact,
       onCompleted: (pin) {

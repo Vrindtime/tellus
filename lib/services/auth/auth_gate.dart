@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:get_storage/get_storage.dart';
-import 'package:lottie/lottie.dart';
 import 'package:tellus/services/auth/auth_service.dart';
 import 'package:tellus/views/screens/accountant/bottom_nav_scaffold.dart';
 import 'package:tellus/views/screens/admin/bottom_nav_scaffold.dart';
@@ -9,6 +7,8 @@ import 'package:tellus/views/screens/auth/organization.dart';
 import 'package:tellus/views/screens/driver/bottom_nav_scaffold.dart';
 
 class AuthLoadingPage extends StatefulWidget {
+  const AuthLoadingPage({super.key});
+
   @override
   State<AuthLoadingPage> createState() => _AuthLoadingPageState();
 }
@@ -63,7 +63,7 @@ class AuthGate {
           break;
       }
     } catch (e) {
-      print('Error in checkRoleAndNavigate: $e');
+      debugPrint('-----checkRoleAndNavigate()-----: $e');
     }
   }
 }

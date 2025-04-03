@@ -44,7 +44,7 @@ class OtpPage extends StatelessWidget {
                       style: Theme.of(context).textTheme.labelMedium,
                       textAlign: TextAlign.center,
                     ),
-                    PinputInput(pinController: pinController, isComplete: true),
+                    PinputInput(pinController: otpVerificationController.pinController, isComplete: true),
                     Obx(
                       () => SubmitButton(
                         text: "Verify",

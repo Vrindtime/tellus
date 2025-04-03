@@ -18,6 +18,7 @@ class SearchTextField extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return TypeAheadField<Map<String, String>>(
+      controller: controller,
       builder: (context, _ , focusNode) {
         return SizedBox(
           height: 60,
@@ -71,6 +72,7 @@ class SearchTextField extends StatelessWidget {
         onSuggestionSelected(suggestion);
       },
       hideKeyboardOnDrag: true,
+
     );
   }
 }
