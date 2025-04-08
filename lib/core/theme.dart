@@ -5,7 +5,7 @@ final ThemeData lightTheme = ThemeData(
   scaffoldBackgroundColor: Color(0xFFF1F2F4),
   colorScheme: ColorScheme(
     brightness: Brightness.light,
-    primary: Color.fromARGB(255, 31, 102, 224), // --primary-500 ##1f66e0
+    primary: Color.fromARGB(255, 31, 102, 224), // --primary-500 #1f66e0
     onPrimary: Color(0xFFFFFFFF), // Typically white or a light color
     secondary: Color(0xFFFF8C00), // --secondary-500
     onSecondary: Color(0xFFFFFFFF), // Typically white or a light color

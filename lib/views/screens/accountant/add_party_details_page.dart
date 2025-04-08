@@ -1,9 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+import 'package:tellus/services/accountant/party_controller.dart';
 import 'package:tellus/views/widgets/custom_size_button.dart';
 import 'package:tellus/views/widgets/text_input_widget.dart';
 
 class AddPartyDetailsPage extends StatefulWidget {
-  const AddPartyDetailsPage({super.key});
+  const AddPartyDetailsPage({super.key, this.party});
+
+  final Party? party;
 
   @override
   State<AddPartyDetailsPage> createState() => _AddPartyDetailsPageState();
@@ -14,12 +18,52 @@ class _AddPartyDetailsPageState extends State<AddPartyDetailsPage> {
   final TextEditingController _phoneController = TextEditingController();
   final TextEditingController _gstinController = TextEditingController();
 
-  bool isLoading = true;
+  bool isLoading = false;
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.party != null) {
+      _nameController.text = widget.party!.name;
+      _phoneController.text = widget.party!.phoneNumber;
+      _gstinController.text = widget.party!.gstin ?? '';
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Add Party Details'), centerTitle: true),
+      appBar: AppBar(
+        title: Text(
+          widget.party == null ? 'Add Party Details' : 'Edit Party Details',
+        ),
+        centerTitle: true,
+        actions: (widget.party == null)?null:[
+          IconButton(
+            icon: Icon(
+              Icons.delete,
+              color: Theme.of(context).colorScheme.error,
+            ),
+            onPressed: () async {
+              setState(() {
+                isLoading = true;
+              });
+
+              try {
+                final partyController = Get.find<PartyController>();
+                await partyController.deleteParty(widget.party!.documentId);
+                Navigator.pop(context);
+              } catch (e) {
+                Get.snackbar('Error', 'Failed to delete party: $e');
+              } finally {
+                setState(() {
+                  isLoading = false;
+                });
+              }
+            },
+          ),
+        ],
+      ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
@@ -61,15 +105,49 @@ class _AddPartyDetailsPageState extends State<AddPartyDetailsPage> {
             CustomSubmitButton(
               text: 'Save',
               isLoading: isLoading,
-              onTap: () async{
+              onTap: () async {
+                if (_nameController.text.isEmpty ||
+                    _phoneController.text.isEmpty) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Please fill in all required fields'),
+                    ),
+                  );
+                  return;
+                }
+
+                final party = Party(
+                  documentId: widget.party?.documentId ?? 'unique()',
+                  name: _nameController.text,
+                  phoneNumber: _phoneController.text,
+                  gstin:
+                      _gstinController.text.isEmpty
+                          ? null
+                          : _gstinController.text,
+                );
+
                 setState(() {
                   isLoading = true;
                 });
-                await Future.delayed(const Duration(seconds: 1));
-                Navigator.pop(context);
-                setState(() {
-                  isLoading = false;
-                });
+
+                try {
+                  final partyController = Get.find<PartyController>();
+                  if (widget.party == null) {
+                    await partyController.addParty(party);
+                  } else {
+                    await partyController.updateParty(
+                      widget.party!.documentId,
+                      party,
+                    );
+                  }
+                  Navigator.pop(context);
+                } catch (e) {
+                  Get.snackbar('Error', 'Failed to save party: $e');
+                } finally {
+                  setState(() {
+                    isLoading = false;
+                  });
+                }
               },
             ),
           ],

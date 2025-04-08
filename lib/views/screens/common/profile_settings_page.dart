@@ -3,6 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:tellus/views/widgets/submit_button.dart';
 import 'package:tellus/views/widgets/text_input_widget.dart';
+import 'package:get/get.dart';
+import 'package:tellus/services/admin/admin_controller.dart';
+import 'package:tellus/services/auth/auth_service.dart';
 
 class AdminProfileSettingsPage extends StatefulWidget {
   const AdminProfileSettingsPage({super.key});
@@ -16,22 +19,45 @@ class AdminProfileSettingsPageState extends State<AdminProfileSettingsPage> {
   final ImagePicker _picker = ImagePicker();
 
   File? _profileImage;
-  File? _licenseImage;
   String? fullName;
-  String? dob;
   String? phoneNumber;
 
   final TextEditingController _nameController = TextEditingController();
-  final TextEditingController _dobController = TextEditingController();
+  final TextEditingController _roleController = TextEditingController();
   final TextEditingController _phoneController = TextEditingController();
+  final TextEditingController _idController = TextEditingController();
 
   var isLoading = false;
+
+  final AuthService _authService = Get.find<AuthService>();
+  final AdminUserController _adminController = Get.find<AdminUserController>();
+  String get userId => _authService.userId.value;
+  @override
+  void initState() {
+    super.initState();
+    _loadUserData();
+  }
+
+  Future<void> _loadUserData() async {
+    if (userId.isNotEmpty) {
+      final user = await _adminController.fetchUserById(userId);
+      if (user != null) {
+        setState(() {
+          _idController.text = userId;
+          _nameController.text = user['name'] ?? '';
+          _roleController.text = user['role'] ?? '';
+          _phoneController.text = user['phoneNumber'] ?? '';
+        });
+      }
+    }
+  }
 
   @override
   void dispose() {
     _nameController.dispose();
-    _dobController.dispose();
+    _roleController.dispose();
     _phoneController.dispose();
+    _idController.dispose();
     super.dispose();
   }
 
@@ -78,6 +104,14 @@ class AdminProfileSettingsPageState extends State<AdminProfileSettingsPage> {
                         ),
                 ),
                 CustomTextInput(
+                  label: "User ID",
+                  controller: _idController,
+                  keyboardType: TextInputType.text,
+                  icon: Icons.perm_identity,
+                  readOnly: true,
+                  hintText: "This field is not editable",
+                ),
+                CustomTextInput(
                   label: "Full Name",
                   controller: _nameController,
                   keyboardType: TextInputType.name,
@@ -88,21 +122,6 @@ class AdminProfileSettingsPageState extends State<AdminProfileSettingsPage> {
                   validator: (value) {
                     if (value == null || value.isEmpty) {
                       return 'Please enter your full name';
-                    }
-                    return null;
-                  },
-                ),
-                CustomTextInput(
-                  label: "Date of Birth",
-                  controller: _dobController,
-                  keyboardType: TextInputType.datetime,
-                  icon: Icons.calendar_today,
-                  onSaved: (value) {
-                    dob = value;
-                  },
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Please enter your date of birth';
                     }
                     return null;
                   },
@@ -119,56 +138,39 @@ class AdminProfileSettingsPageState extends State<AdminProfileSettingsPage> {
                     if (value == null || value.isEmpty) {
                       return 'Please enter your phone number';
                     }
-                    if (value.length != 10 || int.tryParse(value) == null) {
-                      return 'Phone number must be 10 digits';
+                    if (value.length <= 10) {
+                      return 'must be more than 10 digits,include "+91"';
                     }
                     return null;
                   },
                 ),
-                GestureDetector(
-                  onTap: () async {
-                    final pickedFile = await _picker.pickImage(
-                      source: ImageSource.gallery,
-                    );
-                    setState(() {
-                      _licenseImage =
-                          pickedFile != null ? File(pickedFile.path) : null;
-                    });
-                  },
-                  child: Container(
-                    height: 100,
-                    width: double.infinity,
-                    decoration: BoxDecoration(
-                      border: Border.all(
-                        color: Theme.of(context).colorScheme.onSurface,
-                        width: 0.5,
-                      ),
-                      borderRadius: BorderRadius.circular(10),
-                      color: Theme.of(context).scaffoldBackgroundColor,
-                    ),
-                    child: _licenseImage == null
-                        ? Center(
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Icon(Icons.add_a_photo, size: 40),
-                                Text("Add Driving License"),
-                              ],
-                            ),
-                          )
-                        : Image.file(
-                            File(_licenseImage!.path),
-                            fit: BoxFit.cover,
-                          ),
-                  ),
+                CustomTextInput(
+                  label: "Role",
+                  controller: _roleController,
+                  keyboardType: TextInputType.text,
+                  icon: Icons.badge,
+                  readOnly: true,
+                  hintText: "This field is not editable",
                 ),
                 SubmitButton(
                   text: "Save",
                   isLoading: isLoading,
-                  onTap: () {
+                  onTap: () async{
                     if (_formKey.currentState!.validate()) {
                       _formKey.currentState!.save();
                       // Save the form data
+                      setState(() {
+                        isLoading = true;
+                      });
+                      final data = {
+                        'name': _nameController.text,
+                        'phoneNumber': _phoneController.text,
+                      };
+                      await _adminController.saveUser(userId, data);
+                      setState(() {
+                        isLoading = false;
+                      });
+                      
                     }
                   },
                 ),

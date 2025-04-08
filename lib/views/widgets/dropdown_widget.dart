@@ -42,7 +42,10 @@ class CustomDropdown extends StatelessWidget {
             ),
             onChanged: (value) {
               state.didChange(value);
-              onChanged(value); // Notify parent widget of the change
+              print(value);
+              if (value != null) {
+                onChanged(value); // Notify parent widget of the change
+              }
             },
             items: items
                 .map((String item) => DropdownMenuItem<String>(

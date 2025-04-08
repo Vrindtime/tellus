@@ -7,4 +7,5 @@ class CIdExample {
   static var orgsCollectionId = 'xxx_orgs_collection_id';
   static var userCollectionId = 'xxx_user_collection_id';
   static var vehiclesCollectionId = 'xxx_vehicles_collection_id';
+  static var partyCollectionId = 'xxx_party_collection_id';
 }

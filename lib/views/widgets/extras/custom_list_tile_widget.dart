@@ -21,7 +21,8 @@ class UserListTileWidget extends StatelessWidget {
       height: MediaQuery.of(context).size.height * 0.1,
       child: AnimationList(
         duration: 1200,
-        animationDirection: AnimationDirection.horizontal,
+        shrinkWrap: true,
+        physics: const NeverScrollableScrollPhysics(),
         children: [
           Container(
             margin: const EdgeInsets.symmetric(horizontal: 5, vertical: 5),

@@ -23,13 +23,17 @@ class CreateUserPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final AdminController controller = Get.put(AdminController());
+    final AdminUserController controller = Get.put(AdminUserController());
 
-    if (isEdit) {
-      controller.nameController.text = name;
-      controller.phoneController.text = phone;
-      controller.selectedRole.value = role;
-    }
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (isEdit) {
+        controller.nameController.text = name;
+        controller.phoneController.text = phone;
+        controller.selectedRole.value = role;
+      } else {
+        controller.resetState(); // Reset state for creating a new user
+      }
+    });
 
     return Scaffold(
       appBar: AppBar(
@@ -53,13 +57,21 @@ class CreateUserPage extends StatelessWidget {
               icon: Icons.phone,
             ),
             const SizedBox(height: 10),
-            CustomDropdown(
-              label: 'Role',
-              selectedValue: controller.selectedRole.value,
-              items: controller.roles,
-              onChanged: (value) {
-                controller.selectedRole.value = value!;
-              },
+            Obx(
+              () => CustomDropdown(
+                label: 'Select Role',
+                items: controller.roles,
+                selectedValue: controller.selectedRole.value,
+                onChanged: (value) {
+                  controller.selectedRole.value = value!;
+                },
+                validator: (value) {
+                  if (value == null) {
+                    return 'Please select a Role';
+                  }
+                  return null;
+                },
+              ),
             ),
             const SizedBox(height: 20),
             Row(

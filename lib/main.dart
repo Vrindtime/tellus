@@ -24,12 +24,10 @@ void main() async {
   Get.put(account);
   Get.put(databases);
 
-  // Ensure AuthService is fully initialized before running the app
+  
   await Get.putAsync(() => AuthService().init());
 
-  WidgetsBinding.instance.addPostFrameCallback((_) {
-    // Add any additional initialization logic here if needed
-  });
+  WidgetsBinding.instance.addPostFrameCallback((_) {});
 
   runApp(const MyApp());
 }

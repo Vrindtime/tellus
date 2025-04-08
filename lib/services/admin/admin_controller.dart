@@ -4,12 +4,12 @@ import 'package:appwrite/appwrite.dart';
 import 'package:tellus/core/id.dart';
 import 'package:tellus/services/auth/auth_service.dart';
 
-class AdminController extends GetxController {
+class AdminUserController extends GetxController {
   final TextEditingController nameController = TextEditingController();
   final TextEditingController phoneController = TextEditingController();
   final RxString selectedRole = 'admin'.obs;
   final RxList<Map<String, dynamic>> users = <Map<String, dynamic>>[].obs;
-  final RxBool isLoading = false.obs; // Add a loading state
+  final RxBool isLoading = false.obs; // common loading state
 
   final List<String> roles = ['admin', 'accountant', 'driver'];
 
@@ -22,10 +22,12 @@ class AdminController extends GetxController {
     fetchUsers();
   }
 
-  void clearFields() {
+  void resetState() {
     nameController.clear();
     phoneController.clear();
     selectedRole.value = 'admin';
+    users.clear();
+    isLoading.value = false;
   }
 
   Future<void> createUser() async {
@@ -57,13 +59,10 @@ class AdminController extends GetxController {
           'organizationId': orgId, // Fetch actual organization ID
         },
       );
-
+      Get.back();
+      resetState();
       Get.snackbar('Success', 'User ${userDocument.data['name']} created successfully',
           snackPosition: SnackPosition.BOTTOM);
-
-      // Clear the fields after successful creation
-      clearFields();
-      Get.back();
     } catch (e) {
       Get.snackbar('Error', 'Failed to create user: $e',
           snackPosition: SnackPosition.BOTTOM);
@@ -137,8 +136,8 @@ class AdminController extends GetxController {
           snackPosition: SnackPosition.BOTTOM);
       debugPrint('User updated successfully');
 
-      // Clear the fields after successful update
-      clearFields();
+      // Reset state after successful update
+      resetState();
     } catch (e) {
       Get.snackbar('Error', 'Failed to update user: $e',
           snackPosition: SnackPosition.BOTTOM,);
@@ -164,8 +163,46 @@ class AdminController extends GetxController {
           snackPosition: SnackPosition.BOTTOM);
       debugPrint('User deleted successfully');
       fetchUsers(); // Refresh the user list
+      resetState(); // Reset state after use
     } catch (e) {
       Get.snackbar('Error', 'Failed to delete user: $e',
+          snackPosition: SnackPosition.BOTTOM);
+    }
+  }
+
+  Future<Map<String, dynamic>?> fetchUserById(String userId) async {
+    try {
+      final response = await databases.getDocument(
+        databaseId: CId.databaseId,
+        collectionId: CId.userCollectionId,
+        documentId: userId,
+      );
+      return {
+        'id': response.$id,
+        'name': response.data['name'],
+        'dob': response.data['dob'],
+        'phoneNumber': response.data['phoneNumber'],
+        'role': response.data['role'],
+      };
+    } catch (e) {
+      debugPrint('Error fetching user by ID: $e');
+      return null;
+    }
+  }
+
+  Future<void> saveUser(String userId, Map<String, dynamic> updatedData) async {
+    try {
+      await databases.updateDocument(
+        databaseId: CId.databaseId,
+        collectionId: CId.userCollectionId,
+        documentId: userId,
+        data: updatedData,
+      );
+      Get.back();
+      Get.snackbar('Success', 'User details updated successfully',
+          snackPosition: SnackPosition.BOTTOM);
+    } catch (e) {
+      Get.snackbar('Error', 'Failed to save user details: $e',
           snackPosition: SnackPosition.BOTTOM);
     }
   }
@@ -174,6 +211,7 @@ class AdminController extends GetxController {
   void onClose() {
     nameController.dispose();
     phoneController.dispose();
+    resetState(); // Ensure state is reset on close
     super.onClose();
   }
 }

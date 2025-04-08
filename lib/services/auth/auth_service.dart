@@ -318,4 +318,5 @@ class AuthService extends GetxService {
     clearCache(); //remove everyting from the cache
     debugPrint('User logged out and cache cleared.');
   }
+
 }

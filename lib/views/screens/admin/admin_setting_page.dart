@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:tellus/views/screens/accountant/bottom_nav_scaffold.dart';
-import 'package:tellus/views/screens/admin/profile_settings_page.dart';
+import 'package:tellus/views/screens/common/profile_settings_page.dart';
 import 'package:tellus/views/screens/driver/bottom_nav_scaffold.dart';
 import 'package:tellus/views/widgets/list_tile_widget.dart';
 

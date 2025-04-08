@@ -10,6 +10,8 @@ class CustomTextInput extends StatelessWidget {
     this.onSaved,
     this.onChanged,
     this.validator,
+    this.readOnly = false,
+    this.hintText,
   });
 
   final String label;
@@ -19,6 +21,8 @@ class CustomTextInput extends StatelessWidget {
   final FormFieldSetter<String>? onSaved;
   final FormFieldSetter<String>? onChanged;
   final FormFieldValidator<String>? validator;
+  final bool readOnly;
+  final String? hintText;
 
   @override
   Widget build(BuildContext context) {
@@ -26,14 +30,18 @@ class CustomTextInput extends StatelessWidget {
       height: 58,
       child: Column(
         children: [
-          SizedBox(height: MediaQuery.of(context).size.height * 0.008,),
+          SizedBox(height: MediaQuery.of(context).size.height * 0.003,),
           TextFormField(
             controller: controller,
             keyboardType: keyboardType,
-            style: Theme.of(context).textTheme.labelMedium,
+            style: Theme.of(context).textTheme.labelMedium?.copyWith(
+              color: readOnly ? Colors.grey : null,
+            ),
             decoration: InputDecoration(
               labelText: label,
               labelStyle: Theme.of(context).textTheme.labelSmall,
+              hintText: hintText,
+              hintStyle: TextStyle(color: Colors.grey),
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(10.0),
                 borderSide: BorderSide(
@@ -66,6 +74,7 @@ class CustomTextInput extends StatelessWidget {
             onSaved: onSaved,
             validator: validator,
             onChanged: onChanged,
+            readOnly: readOnly,
           ),
         ],
       ),

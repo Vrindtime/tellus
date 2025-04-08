@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:page_transition/page_transition.dart';
+import 'package:tellus/views/screens/accountant/party_details_page.dart';
 import 'package:tellus/views/screens/admin/create_user_page.dart';
 import 'package:tellus/views/screens/common/common_page_name.dart';
 import 'package:tellus/views/screens/common/quick_link_widget.dart';
 import 'package:get/get.dart';
 import 'package:tellus/services/admin/admin_controller.dart';
 import 'package:tellus/views/widgets/extras/custom_list_tile_widget.dart';
-import 'package:tellus/views/widgets/list_tile_widget.dart';
 import 'package:custom_refresh_indicator/custom_refresh_indicator.dart';
 
 class AdminDashboardPage extends StatefulWidget {
@@ -17,7 +17,7 @@ class AdminDashboardPage extends StatefulWidget {
 }
 
 class _AdminDashboardPageState extends State<AdminDashboardPage> {
-  final AdminController controller = Get.put(AdminController());
+  final AdminUserController controller = Get.put(AdminUserController());
 
   @override
   void initState() {
@@ -76,16 +76,14 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
                 QuickLinkWidget(
-                  icon: Icons.payment,
-                  label: "Manage Payroll",
+                  icon: Icons.business_center,
+                  label: "Manage Party",
                   onTap: () {
                     Navigator.push(
                       context,
                       PageTransition(
                         type: PageTransitionType.rightToLeftJoined,
-                        child: const CommonPage(
-                          pagename: 'Manage Payroll of Staff',
-                        ),
+                        child: const PartyDetailsPage(isAdmin: true,),
                         childCurrent: const AdminDashboardPage(),
                       ),
                     );
@@ -125,11 +123,11 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                     from: IndicatorState.dragging,
                     to: IndicatorState.armed,
                   )) {
-                    print('Indicator armed');
+                    debugPrint('Indicator armed');
                   } else if (change.didChange(to: IndicatorState.idle)) {
-                    print('Indicator idle');
+                    debugPrint('Indicator idle');
                   } else if (change.didChange(to: IndicatorState.loading)) {
-                    print('Indicator loading');
+                    debugPrint('Indicator loading');
                   }
                 },
                 builder: (
@@ -155,6 +153,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                 child: Obx(() {
                   final users = controller.users;
                   if (users.isEmpty && !controller.isLoading.value) {
+                    controller.fetchUsers();
                     return const Center(child: Text('No users found'));
                   }
                   if (controller.isLoading.value && users.isEmpty) {
@@ -168,17 +167,17 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                       final role = users[index]['role'];
                       final phone = users[index]['phoneNumber'];
                       final avatarIcon = 'IMG';
-                      print('--- User Name from Admin DashBaord: $username');
-                      print('--- User ID from Admin DashBaord: $userId');
-                      print('--- User phone from Admin DashBaord: $phone');
-                      print('\n');
+                      // debugPrint('--- User Name from Admin DashBaord: $username');
+                      // debugPrint('--- User ID from Admin DashBaord: $userId');
+                      // debugPrint('--- User phone from Admin DashBaord: $phone');
+                      // debugPrint('\n');
                       return UserListTileWidget(
                         title: username,
                         subtitle: role,
                         avatarIcon: avatarIcon,
                         onTap: () {
                           final user = users[index];
-                          if (user != null) {
+                          if (user.isNotEmpty) {
                             Navigator.push(
                               context,
                               PageTransition(
