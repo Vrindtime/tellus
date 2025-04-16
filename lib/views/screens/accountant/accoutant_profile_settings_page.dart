@@ -44,6 +44,8 @@ class Accountant_ProfileSettingsPageState extends State<AccountantProfileSetting
           'Profile Settings',
           style: Theme.of(context).textTheme.titleMedium,
         ),
+        centerTitle: true,
+        forceMaterialTransparency: true,
       ),
       body: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 20.0),

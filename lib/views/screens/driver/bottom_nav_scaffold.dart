@@ -26,6 +26,7 @@ class _DriverBottomNavigationMenuPageState
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        forceMaterialTransparency: true,
         title: Text("Driver", style: Theme.of(context).textTheme.titleMedium),
         automaticallyImplyLeading: false,
         backgroundColor: Theme.of(context).scaffoldBackgroundColor,

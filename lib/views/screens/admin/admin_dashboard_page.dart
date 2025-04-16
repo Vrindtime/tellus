@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:page_transition/page_transition.dart';
 import 'package:tellus/views/screens/accountant/party_details_page.dart';
+import 'package:tellus/views/screens/admin/task/assign_task_page.dart';
 import 'package:tellus/views/screens/admin/create_user_page.dart';
 import 'package:tellus/views/screens/common/common_page_name.dart';
 import 'package:tellus/views/screens/common/quick_link_widget.dart';
@@ -55,15 +56,13 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                 ),
                 QuickLinkWidget(
                   icon: Icons.task,
-                  label: "Assign Task",
+                  label: "Assign Work",
                   onTap: () {
                     Navigator.push(
                       context,
                       PageTransition(
                         type: PageTransitionType.rightToLeftJoined,
-                        child: const CommonPage(
-                          pagename: 'Assign Task to drivers page',
-                        ),
+                        child: AssignTaskPage(),
                         childCurrent: const AdminDashboardPage(),
                       ),
                     );
@@ -174,7 +173,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                       return UserListTileWidget(
                         title: username,
                         subtitle: role,
-                        avatarIcon: avatarIcon,
+                        avatarUrl: null,
                         onTap: () {
                           final user = users[index];
                           if (user.isNotEmpty) {

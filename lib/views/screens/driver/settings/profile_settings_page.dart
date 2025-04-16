@@ -44,6 +44,8 @@ class Driver_ProfileSettingsPageState extends State<DriverProfileSettingsPage> {
           'Profile Settings',
           style: Theme.of(context).textTheme.titleMedium,
         ),
+        centerTitle: true,
+        forceMaterialTransparency: true,
       ),
       body: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 20.0),

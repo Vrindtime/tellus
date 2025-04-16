@@ -39,6 +39,7 @@ class CreateUserPage extends StatelessWidget {
       appBar: AppBar(
         title: Text(isEdit ? 'Edit User' : 'Create User'),
         centerTitle: true,
+        forceMaterialTransparency: true,
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),

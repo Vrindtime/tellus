@@ -19,10 +19,12 @@ void main() async {
 
   Account account = Account(client);
   Databases databases = Databases(client);
+  Storage storage = Storage(client);
 
   Get.put(client);
   Get.put(account);
   Get.put(databases);
+  Get.put(storage);
 
   
   await Get.putAsync(() => AuthService().init());

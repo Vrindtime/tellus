@@ -1,39 +1,39 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:date_picker_plus/date_picker_plus.dart';
+import 'package:intl/intl.dart';
 
 class VehicleDatePickerTextField extends StatefulWidget {
   const VehicleDatePickerTextField({
     super.key,
     required this.label,
     required this.initialDate,
-    required this.onDateSelected, required this.validator,
+    required this.onDateSelected,
+    this.validator, // Made optional, but type is now correct
   });
 
   final String label;
   final DateTime initialDate;
-  final Function(DateTime) validator;
   final Function(DateTime) onDateSelected;
+  final String? Function(String?)? validator; // Changed to match TextField
 
   @override
-  Vehicle_DatePickerTextFieldState createState() =>
-      Vehicle_DatePickerTextFieldState();
+  VehicleDatePickerTextFieldState createState() =>
+      VehicleDatePickerTextFieldState();
 }
 
-class Vehicle_DatePickerTextFieldState
+class VehicleDatePickerTextFieldState
     extends State<VehicleDatePickerTextField> {
-  DateTime? _selectedDate = DateTime(
-    DateTime.now().year,
-    DateTime.now().month,
-    DateTime.now().day,
-  );
+  DateTime? _selectedDate;
   final TextEditingController _dateController = TextEditingController();
+  final DateFormat _dateFormat = DateFormat('dd-MM-yyyy');
 
   @override
   void initState() {
-    // TODO: implement initState
     super.initState();
-    _dateController.text = _selectedDate.toString().split(' ')[0];
+    _selectedDate = widget.initialDate;
+    // _dateController.text = widget.initialDate.toString().split(' ')[0];/
+    _dateController.text = _dateFormat.format(widget.initialDate);
   }
 
   @override
@@ -42,7 +42,6 @@ class Vehicle_DatePickerTextFieldState
     super.dispose();
   }
 
-  @override
   void _showDatePickerDialog() {
     Get.dialog(
       Dialog(
@@ -51,7 +50,7 @@ class Vehicle_DatePickerTextFieldState
           height: MediaQuery.of(context).size.height * 0.5,
           child: DatePicker(
             initialDate: widget.initialDate,
-            minDate: DateTime(2020, 10, 10),
+            minDate: DateTime(2000, 10, 10),
             maxDate: DateTime(2050, 10, 30),
             currentDate: DateTime.now(),
             selectedDate: _selectedDate,
@@ -61,18 +60,24 @@ class Vehicle_DatePickerTextFieldState
             splashColor: Colors.lightBlueAccent,
             splashRadius: 40,
             centerLeadingDate: true,
-            padding: EdgeInsets.all(15),
-            selectedCellTextStyle: Theme.of(context).textTheme.labelMedium?.copyWith(color: Colors.white),
+            padding: const EdgeInsets.all(15),
+            selectedCellTextStyle: Theme.of(context)
+                .textTheme
+                .labelMedium
+                ?.copyWith(color: Colors.white),
             enabledCellsTextStyle: Theme.of(context).textTheme.labelMedium,
+            currentDateTextStyle: Theme.of(context).textTheme.labelMedium,
             currentDateDecoration: const BoxDecoration(
-              color: Colors.lightBlueAccent,
+              color: Colors.transparent,
               shape: BoxShape.circle,
             ),
             onDateSelected: (date) {
               setState(() {
                 _selectedDate = date;
-                _dateController.text = date.toString().split(' ')[0];
+                // _dateController.text = date.toString().split(' ')[0];
+                _dateController.text = _dateFormat.format(date); // Format as dd-MM-yyyy
               });
+              widget.onDateSelected(date); // Pass the DateTime to the callback
               Get.back(result: date);
             },
           ),
@@ -83,13 +88,13 @@ class Vehicle_DatePickerTextFieldState
 
   @override
   Widget build(BuildContext context) {
-    return TextField(
+    return TextFormField(
       controller: _dateController,
-      readOnly: true, // Prevent manual editing
-      onTap: _showDatePickerDialog, // Show dialog on tap
+      readOnly: true,
+      onTap: _showDatePickerDialog,
       style: Theme.of(context).textTheme.labelMedium,
       decoration: InputDecoration(
-        labelText: 'Select Date',
+        labelText: widget.label,
         labelStyle: Theme.of(context).textTheme.labelSmall,
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(10.0),
@@ -120,6 +125,7 @@ class Vehicle_DatePickerTextFieldState
           ),
         ),
       ),
+      validator: widget.validator, // Pass the validator to TextField
     );
   }
 }

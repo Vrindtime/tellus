@@ -25,6 +25,7 @@ class _AccountantBottomNavigationMenuPageState
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        forceMaterialTransparency: true,
         title: Text(
           "Accountant",
           style: Theme.of(context).textTheme.titleMedium,

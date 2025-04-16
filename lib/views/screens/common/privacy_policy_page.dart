@@ -95,6 +95,7 @@ class PrivacyPolicyPage extends StatelessWidget {
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
+        forceMaterialTransparency: true,
         backgroundColor: Theme.of(context).colorScheme.surface,
         title: Text(
           'Privacy Policy',

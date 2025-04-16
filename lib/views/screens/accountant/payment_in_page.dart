@@ -50,6 +50,7 @@ class _PaymentInPageState extends State<PaymentInPage> {
           style: Theme.of(context).textTheme.titleMedium,
         ),
         centerTitle: true,
+        forceMaterialTransparency: true,
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),

@@ -27,6 +27,7 @@ class _AddOrganizationPageState extends State<AddOrganizationPage> {
           style: TextStyle(fontSize: 20),
         ),
         centerTitle: true,
+        forceMaterialTransparency: true,
       ),
       body: Padding(
         padding: const EdgeInsets.all(8.0),

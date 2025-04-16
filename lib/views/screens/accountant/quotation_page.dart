@@ -165,6 +165,7 @@ class _QuotationPageState extends State<QuotationPage> {
           style: Theme.of(context).textTheme.titleMedium,
         ),
         centerTitle: true,
+        forceMaterialTransparency: true,
       ),
       body: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 8.0), // Reduced padding

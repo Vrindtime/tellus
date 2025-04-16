@@ -9,12 +9,18 @@ class Party {
   String name;
   String phoneNumber;
   String? gstin;
+  String? companyName;
+  String? location;
+  String? pfp; // Will store the Appwrite file ID for the profile picture
 
   Party({
     required this.documentId,
     required this.name,
     required this.phoneNumber,
     this.gstin,
+    this.companyName,
+    this.location,
+    this.pfp,
   });
 }
 
@@ -24,24 +30,31 @@ class PartyController extends GetxController {
 
   var parties = <Party>[].obs;
   var filteredParties = <Party>[].obs;
+  var searchQuery = ''.obs; // Observable for search input
 
   TextEditingController searchController = TextEditingController();
 
   @override
   void onInit() {
     super.onInit();
-    fetchParties();
-    searchController.addListener(() {
-      filterParties(searchController.text);
+    // Defer fetch until after the first frame
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      fetchParties();
     });
-  }  
+    // Debounce search updates
+    debounce(searchQuery, (String query) {
+      filterParties(query);
+    }, time: const Duration(milliseconds: 300));
+  }
+
+  String getPreviewUrl(String fileId) {
+    return '${CId.endPoint}/v1/storage/buckets/party_pfps/files/$fileId/preview?project=${CId.project}';
+  }
 
   Future<void> fetchParties() async {
     try {
       final orgId = authService.orgId.value;
-      debugPrint('Fetching parties for organization ID: $orgId');
       if (orgId.isEmpty) {
-        debugPrint('Organization ID is not set. Please log in again.');
         throw Exception('Organization ID is not set. Please log in again.');
       }
 
@@ -51,8 +64,6 @@ class PartyController extends GetxController {
         queries: [Query.equal('organizationId', orgId)],
       );
 
-      debugPrint('Fetched parties: ${response.documents}');
-
       parties.assignAll(
         response.documents.map(
           (doc) => Party(
@@ -60,12 +71,14 @@ class PartyController extends GetxController {
             name: doc.data['name'],
             phoneNumber: doc.data['phoneNumber'],
             gstin: doc.data['gstin'],
+            companyName: doc.data['companyName'],
+            location: doc.data['location'],
+            pfp: doc.data['pfp'],
           ),
         ),
       );
-      filterParties('');
+      filterParties(searchQuery.value); // Apply current search query
     } catch (e) {
-      debugPrint('Error fetching parties: $e');
       Get.snackbar('Error', 'Failed to fetch parties: $e');
     }
   }
@@ -100,6 +113,9 @@ class PartyController extends GetxController {
           'name': party.name,
           'phoneNumber': party.phoneNumber,
           'gstin': party.gstin,
+          'companyName': party.companyName,
+          'location': party.location,
+          'pfp': party.pfp,
           'organizationId': orgId,
         },
       );
@@ -123,6 +139,9 @@ class PartyController extends GetxController {
           'name': updatedParty.name,
           'phoneNumber': updatedParty.phoneNumber,
           'gstin': updatedParty.gstin,
+          'companyName': updatedParty.companyName,
+          'location': updatedParty.location,
+          'pfp': updatedParty.pfp,
         },
       );
       debugPrint('Party updated successfully: $documentId');
@@ -150,6 +169,37 @@ class PartyController extends GetxController {
       Get.snackbar('Error', 'Failed to delete party: $e');
     }
   }
+
+  Future<List<Map<String, String>>> getPartySuggestions(String query) async {
+    try {
+      final orgId = authService.orgId.value;
+      if (orgId.isEmpty) {
+        throw Exception('Organization ID is not set. Please log in again.');
+      }
+
+      final response = await databases.listDocuments(
+        databaseId: CId.databaseId,
+        collectionId: CId.partyCollectionId,
+        queries: [Query.equal('organizationId', orgId)],
+      );
+
+      List<Map<String, String>> partyList =
+          response.documents
+              .map((doc) => {'name': doc.data['name'].toString()})
+              .toList();
+
+      return partyList
+          .where(
+            (party) =>
+                party['name']!.toLowerCase().contains(query.toLowerCase()),
+          )
+          .toList();
+    } catch (e) {
+      debugPrint('Error fetching party suggestions: $e');
+      return [];
+    }
+  }
+
 
   @override
   void onClose() {

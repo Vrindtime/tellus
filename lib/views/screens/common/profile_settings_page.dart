@@ -70,6 +70,8 @@ class AdminProfileSettingsPageState extends State<AdminProfileSettingsPage> {
           'Profile Settings',
           style: Theme.of(context).textTheme.titleMedium,
         ),
+        centerTitle: true,
+        forceMaterialTransparency: true,
       ),
       body: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 20.0),

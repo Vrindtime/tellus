@@ -4,13 +4,13 @@ import 'package:animation_list/animation_list.dart';
 class UserListTileWidget extends StatelessWidget {
   final String title;
   final String subtitle;
-  final String avatarIcon;
+  final String? avatarUrl;
   final Function onTap;
 
   const UserListTileWidget({
     required this.title,
     required this.subtitle,
-    required this.avatarIcon,
+    this.avatarUrl,
     required this.onTap,
     super.key,
   });
@@ -36,19 +36,27 @@ class UserListTileWidget extends StatelessWidget {
                 CircleAvatar(
                   radius: 20,
                   backgroundColor: Theme.of(context).colorScheme.primary,
-                  child: Text(
-                    avatarIcon,
-                    style: Theme.of(context).textTheme.labelSmall?.copyWith(color: Colors.white),
-                  ),
+                  child:
+                      avatarUrl != null
+                          ? CircleAvatar(
+                            child: Image.network(avatarUrl!),
+                          )
+                          : CircleAvatar(child: Icon(Icons.person)),
                 ),
                 SizedBox(width: 10),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(title, style: Theme.of(context).textTheme.titleMedium),
+                      Text(
+                        title,
+                        style: Theme.of(context).textTheme.titleMedium?.copyWith(fontSize: 20),
+                      ),
                       const SizedBox(height: 4),
-                      Text(subtitle, style: Theme.of(context).textTheme.bodySmall),
+                      Text(
+                        subtitle,
+                        style: Theme.of(context).textTheme.bodySmall,
+                      ),
                     ],
                   ),
                 ),

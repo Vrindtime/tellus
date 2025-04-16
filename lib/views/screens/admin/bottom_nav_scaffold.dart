@@ -27,6 +27,7 @@ class AdminBottomNavigationMenuPageState
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        forceMaterialTransparency: true,
         title: Text(
           "Admin",
           style: Theme.of(context).textTheme.titleLarge,
@@ -49,9 +50,9 @@ class AdminBottomNavigationMenuPageState
         ],
       ),
       body: [
-        AdminDashboardPage(),
-        VehicleManagementPage(),
         BillingPage(),
+        VehicleManagementPage(),
+        AdminDashboardPage(),
         AdminSettingPage(),
       ][_currentPage],
       bottomNavigationBar: DotCurvedBottomNav(
@@ -85,7 +86,7 @@ class AdminBottomNavigationMenuPageState
                     : Colors.white.withOpacity(0.4),
           ),
           Icon(
-            Icons.payment,
+            Icons.person,
             color:
                 _currentPage == 2
                     ? Theme.of(context).colorScheme.onSurface

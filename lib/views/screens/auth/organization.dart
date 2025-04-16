@@ -21,6 +21,9 @@ class _OrganizationPageState extends State<OrganizationPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar(
+        forceMaterialTransparency: true,
+      ),
       body: Center(
         child: Padding(
           padding: const EdgeInsets.all(26.0),

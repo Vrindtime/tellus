@@ -13,6 +13,7 @@ class NotificationPage extends StatelessWidget {
           style: Theme.of(context).textTheme.titleMedium,
         ),
         centerTitle: true,
+        forceMaterialTransparency: true,
         backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         elevation: 0,
       ),

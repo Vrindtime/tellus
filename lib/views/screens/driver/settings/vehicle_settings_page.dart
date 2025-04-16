@@ -27,24 +27,28 @@ class _VehicleSettingsPageState extends State<VehicleSettingsPage> {
   DateTime? ageOfVehicle;
   int? odo;
   double? rentAmount;
-  String? rentType;
+  int? modelYear;
+  String? companyName;
 
   bool isLoading = false;
 
   final TextEditingController _registrationController = TextEditingController();
   final TextEditingController _ageController = TextEditingController();
-  final TextEditingController _odoController = TextEditingController();
-  final TextEditingController _rentController = TextEditingController();
+  final TextEditingController _meterController = TextEditingController();
+  final TextEditingController _modelYearController = TextEditingController();
+  final TextEditingController _companyNameController = TextEditingController();
 
   @override
   void initState() {
     super.initState();
     if (widget.vehicle != null) {
       _registrationController.text = widget.vehicle!.registrationNumber;
-      _ageController.text = widget.vehicle!.ageOfVehicle.toIso8601String();
-      _odoController.text = widget.vehicle!.odo.toString();
-      _rentController.text = widget.vehicle!.rentAmount.toString();
-      rentType = widget.vehicle!.rentType;
+      ageOfVehicle = widget.vehicle!.ageOfVehicle; // Directly assign DateTime
+      _ageController.text = ageOfVehicle!.toIso8601String(); // For display
+      debugPrint('Vehicle Age: ${_ageController.text}');
+      _meterController.text = widget.vehicle!.meter.toString();
+      _modelYearController.text = widget.vehicle!.modelYear.toString();
+      _companyNameController.text = widget.vehicle!.companyName;
       vehicleType = widget.vehicle!.vehicleType;
     }
   }
@@ -53,8 +57,9 @@ class _VehicleSettingsPageState extends State<VehicleSettingsPage> {
   void dispose() {
     _registrationController.dispose();
     _ageController.dispose();
-    _odoController.dispose();
-    _rentController.dispose();
+    _meterController.dispose();
+    _modelYearController.dispose();
+    _companyNameController.dispose();
     super.dispose();
   }
 
@@ -63,10 +68,12 @@ class _VehicleSettingsPageState extends State<VehicleSettingsPage> {
     return Scaffold(
       appBar: AppBar(
         title: Text(widget.vehicle == null ? 'Add Vehicle' : 'Update Vehicle'),
+        centerTitle: true,
+        forceMaterialTransparency: true,
         actions: widget.vehicle != null
             ? [
                 IconButton(
-                  icon: Icon(Icons.delete,color: Theme.of(context).colorScheme.error,),
+                  icon: Icon(Icons.delete, color: Theme.of(context).colorScheme.error),
                   onPressed: () async {
                     bool? confirmDelete = await showDialog(
                       context: context,
@@ -106,7 +113,7 @@ class _VehicleSettingsPageState extends State<VehicleSettingsPage> {
             child: Column(
               spacing: 15,
               children: [
-                SizedBox(height: 12,),
+                SizedBox(height: 12),
                 GestureDetector(
                   onTap: () async {
                     final pickedFile = await ImagePicker().pickImage(
@@ -117,7 +124,7 @@ class _VehicleSettingsPageState extends State<VehicleSettingsPage> {
                     });
                   },
                   child: CircleAvatar(
-                    radius: 80,
+                    radius: 70,
                     backgroundImage: _image != null ? FileImage(_image!) : null,
                     child: _image == null ? Icon(Icons.camera_alt) : null,
                   ),
@@ -128,7 +135,8 @@ class _VehicleSettingsPageState extends State<VehicleSettingsPage> {
                   controller: _registrationController,
                   keyboardType: TextInputType.text,
                   validator: (value) {
-                    if (value == null || value.isEmpty) {
+                    if (value == null || value.trim().isEmpty) {
+                      debugPrint('Validation failed: Registration Number is required');
                       return 'Please enter the registration number';
                     }
                     return null;
@@ -143,15 +151,16 @@ class _VehicleSettingsPageState extends State<VehicleSettingsPage> {
                     setState(() {
                       ageOfVehicle = selectedDate;
                     });
-                    Get.back(); // Close the dialog and pass the date
                   },
                   validator: (value) {
-                    if (value == null) {
+                    if (ageOfVehicle == null) {
+                      debugPrint('Validation failed: Age of Vehicle is required');
                       return 'Please select the age of the vehicle';
                     }
                     return null;
                   },
                 ),
+                // Vehicle Type dropdown
                 CustomDropdown(
                   label: 'Vehicle Type',
                   items: [
@@ -174,7 +183,8 @@ class _VehicleSettingsPageState extends State<VehicleSettingsPage> {
                   },
                   selectedValue: vehicleType,
                   validator: (value) {
-                    if (value == null) {
+                    if (value == null || value.trim().isEmpty) {
+                      debugPrint('Validation failed: Vehicle Type is required');
                       return 'Please select a vehicle type';
                     }
                     return null;
@@ -182,47 +192,36 @@ class _VehicleSettingsPageState extends State<VehicleSettingsPage> {
                 ),
                 CustomTextInput(
                   icon: Icons.speed,
-                  label: "ODO Reading",
-                  controller: _odoController,
+                  label: "Meter Reading",
+                  controller: _meterController,
                   keyboardType: TextInputType.number,
                   validator: (value) {
-                    if (value == null || value.isEmpty) {
+                    if (value == null || value.trim().isEmpty) {
                       return 'Please enter the ODO reading';
                     }
                     return null;
                   },
                 ),
                 CustomTextInput(
-                  icon: Icons.attach_money,
-                  label: "Rent Amount",
-                  controller: _rentController,
+                  icon: Icons.calendar_today,
+                  label: "Model Year",
+                  controller: _modelYearController,
                   keyboardType: TextInputType.number,
                   validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Please enter the rent amount';
+                    if (value == null || value.trim().isEmpty) {
+                      return 'Please enter the model year';
                     }
                     return null;
                   },
                 ),
-                CustomDropdown(
-                  label: 'Rent Type',
-                  items: [
-                    'Fixed',
-                    'Per Hour',
-                    'Per Day',
-                    'Per Week',
-                    'Per Km',
-                    'Per Trip',
-                  ],
-                  onChanged: (newValue) {
-                    setState(() {
-                      rentType = newValue;
-                    });
-                  },
-                  selectedValue: rentType,
+                CustomTextInput(
+                  icon: Icons.business,
+                  label: "Company Name",
+                  controller: _companyNameController,
+                  keyboardType: TextInputType.text,
                   validator: (value) {
-                    if (value == null) {
-                      return 'Please select a rent type';
+                    if (value == null || value.trim().isEmpty) {
+                      return 'Please enter the company name';
                     }
                     return null;
                   },
@@ -231,36 +230,31 @@ class _VehicleSettingsPageState extends State<VehicleSettingsPage> {
                   isLoading: isLoading,
                   text: widget.vehicle == null ? "Add Vehicle" : "Update Vehicle",
                   onTap: () {
-                    print('clicked 1');
-                    if (_formKey.currentState!.validate()||widget.vehicle!=null) {
+                    // if (_formKey.currentState!.validate()) {
                       _formKey.currentState!.save();
-                      print('clicked 2');
                       try {
                         Vehicle vehicle = Vehicle(
-                          documentId: widget.vehicle?.documentId ?? '', // Assuming you have a documentId field
+                          documentId: widget.vehicle?.documentId ?? '',
                           registrationNumber: _registrationController.text,
                           vehicleType: vehicleType!,
-                          ageOfVehicle: ageOfVehicle ?? DateTime.now(), // Ensure age is not null
-                          odo: int.tryParse(_odoController.text) ?? 0, // Handle invalid input
-                          rentAmount: double.tryParse(_rentController.text) ?? 0.0, // Handle invalid input
-                          rentType: rentType!,
+                          ageOfVehicle: ageOfVehicle ?? DateTime.now(),
+                          meter: int.tryParse(_meterController.text) ?? 0,
+                          modelYear: int.tryParse(_modelYearController.text) ?? 0,
+                          companyName: _companyNameController.text,
                         );
-                        print('clicked 3');
                         if (widget.vehicle == null) {
-                          print('clicked 4');
                           _vehicleController.addVehicle(vehicle);
                         } else {
-                          // Assuming `widget.vehicle` has a `documentId` field
-                          print('Else part of updatevehicle ');
                           _vehicleController.updateVehicle(widget.vehicle!.documentId, vehicle);
                         }
                         Navigator.pop(context);
                       } catch (e) {
                         Get.snackbar('Error', 'Invalid input: ${e.toString()}');
                       }
-                    }else{
-                      Get.snackbar('Error', 'Fill All Fields');
-                    }
+                    // } 
+                    // else {
+                    //   Get.snackbar('Error', 'Fill All Fields');
+                    // }
                   },
                 ),
               ],

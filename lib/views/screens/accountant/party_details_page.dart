@@ -2,8 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:page_transition/page_transition.dart';
 import 'package:tellus/views/screens/accountant/add_party_details_page.dart';
 import 'package:tellus/views/widgets/extras/custom_list_tile_widget.dart';
-import 'package:tellus/views/widgets/list_tile_widget.dart';
-import 'package:tellus/views/widgets/search_text_field_widget.dart';
 import 'package:get/get.dart';
 import 'package:tellus/services/accountant/party_controller.dart';
 import 'package:tellus/views/widgets/text_input_widget.dart';
@@ -22,10 +20,13 @@ class _PartyDetailsPageState extends State<PartyDetailsPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar:
-          widget.isAdmin
-              ? AppBar(title: const Text('Party Details'), centerTitle: true)
-              : null,
+      appBar: widget.isAdmin
+          ? AppBar(
+              title: const Text('Party Details'),
+              centerTitle: true,
+              forceMaterialTransparency: true,
+            )
+          : null,
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(16.0),
@@ -44,7 +45,7 @@ class _PartyDetailsPageState extends State<PartyDetailsPage> {
                         controller: partyController.searchController,
                         icon: Icons.search,
                         onChanged: (value) {
-                          partyController.filterParties(value!);
+                          partyController.searchQuery.value = value ?? '';
                         },
                       ),
                     ),
@@ -54,7 +55,7 @@ class _PartyDetailsPageState extends State<PartyDetailsPage> {
                           context,
                           PageTransition(
                             type: PageTransitionType.rightToLeftWithFade,
-                            child: AddPartyDetailsPage(),
+                            child: const AddPartyDetailsPage(),
                           ),
                         );
                       },
@@ -85,14 +86,15 @@ class _PartyDetailsPageState extends State<PartyDetailsPage> {
                       return UserListTileWidget(
                         title: party.name,
                         subtitle: party.phoneNumber,
-                        avatarIcon: 'IMG',
+                        avatarUrl: party.pfp != null
+                            ? partyController.getPreviewUrl(party.pfp!)
+                            : null,
                         onTap: () {
-                          // Navigate to edit party details
                           Navigator.push(
                             context,
                             PageTransition(
                               type: PageTransitionType.rightToLeftWithFade,
-                              child: AddPartyDetailsPage(party: party,),
+                              child: AddPartyDetailsPage(party: party),
                             ),
                           );
                         },

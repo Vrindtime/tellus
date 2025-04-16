@@ -15,7 +15,7 @@ class AdminUserController extends GetxController {
 
   final Databases databases = Get.find<Databases>();
   final AuthService authService = Get.find<AuthService>();
-
+  
   @override
   void onInit() {
     super.onInit();
