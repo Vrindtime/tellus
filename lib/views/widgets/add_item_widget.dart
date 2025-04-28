@@ -4,7 +4,7 @@ import 'package:tellus/views/widgets/search_text_field_widget.dart';
 import 'package:tellus/views/widgets/text_input_widget.dart';
 
 class AddItemWidget extends StatefulWidget {
-  final Map<String, dynamic>? initialData; // Add optional initialData parameter
+  final Map<String, dynamic>? initialData;
 
   const AddItemWidget({super.key, this.initialData});
 
@@ -14,24 +14,30 @@ class AddItemWidget extends StatefulWidget {
 
 class _AddItemWidgetState extends State<AddItemWidget> {
   final TextEditingController _quantityController = TextEditingController();
-  final TextEditingController _rateController = TextEditingController();
+  final TextEditingController _costPriceController = TextEditingController();
+  final TextEditingController _sellPriceController = TextEditingController();
   final TextEditingController _itemController = TextEditingController();
+  final TextEditingController _fromLocationController = TextEditingController();
   String unit = 'Cubic Meter';
   String taxOption = 'With Tax';
 
-  final List<String> _units = ['Cubic Meter', 'Ton', 'Kilogram'];
-  final List<String> _taxOptions = ['With Tax', 'Without Tax'];
+  final List<String> _units = ['Cubic Meter', 'Ton', 'Kilogram', 'Litre'];
+  final List<String> _taxOptions = ['With Tax (18%)', 'Without Tax'];
 
   @override
   void initState() {
     super.initState();
     if (widget.initialData != null) {
-      // Pre-fill fields with initial data
       _itemController.text = widget.initialData!['name'] ?? '';
-      _quantityController.text = widget.initialData!['quantity']?.toString() ?? '';
-      _rateController.text = widget.initialData!['rate']?.toString() ?? '';
+      _quantityController.text =
+          widget.initialData!['quantity']?.toString() ?? '';
+      _costPriceController.text =
+          widget.initialData!['costPrice']?.toString() ?? '';
+      _sellPriceController.text =
+          widget.initialData!['sellPrice']?.toString() ?? '';
       unit = widget.initialData!['unit'] ?? 'Cubic Meter';
       taxOption = widget.initialData!['taxOption'] ?? 'With Tax';
+      _fromLocationController.text = widget.initialData!['fromLocation'] ?? 'From Location';
     }
   }
 
@@ -43,100 +49,130 @@ class _AddItemWidgetState extends State<AddItemWidget> {
       {'name': 'Topsoil', 'category': 'Soil'},
     ];
     return materials
-        .where((material) =>
-            material['name']!.toLowerCase().contains(query.toLowerCase()))
+        .where(
+          (material) =>
+              material['name']!.toLowerCase().contains(query.toLowerCase()),
+        )
         .toList();
   }
 
   @override
   Widget build(BuildContext context) {
+    final double scaleFactor = MediaQuery.of(context).size.width / 360;
+
     return AlertDialog(
       title: const Text('Add Item'),
-      content: SingleChildScrollView(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            SearchTextField(
-              label: 'Item Name',
-              controller: _itemController,
-              suggestionsCallback: _getItemSuggestions,
-              onSuggestionSelected: (suggestion) {
-                _itemController.text = suggestion['name']!;
-              },
-            ),
-            const SizedBox(height: 10),
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
-              children: [
-                SizedBox(
-                  width: MediaQuery.of(context).size.width * 0.32,
-                  child: CustomTextInput(
-                    label: 'Quantity',
-                    controller: _quantityController,
-                    icon: Icons.percent,
-                    keyboardType: TextInputType.number,
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Quantity is required';
-                      }
-                      return null;
-                    },
-                  ),
+      content: Container(
+        width: 500,
+        child: SingleChildScrollView(
+          child: Column(
+            children: [
+              SizedBox(
+                width: 500,
+                child: SearchTextField(
+                  label: 'Item Name',
+                  controller: _itemController,
+                  suggestionsCallback: _getItemSuggestions,
+                  onSuggestionSelected: (suggestion) {
+                    _itemController.text = suggestion['name']!;
+                  },
                 ),
-                const SizedBox(width: 8),
-                SizedBox(
-                  width: MediaQuery.of(context).size.width * 0.3,
-                  child: CustomDropdown(
-                    label: 'Unit',
-                    selectedValue: unit,
-                    items: _units,
-                    onChanged: (value) {
-                      setState(() {
-                        unit = value!;
-                      });
-                    },
+              ),
+              SizedBox(height: 10 * scaleFactor),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  Expanded(
+                    child: CustomTextInput(
+                      label: 'Quantity',
+                      controller: _quantityController,
+                      icon: Icons.numbers,
+                      keyboardType: TextInputType.number,
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Quantity is required';
+                        }
+                        return null;
+                      },
+                    ),
                   ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
-              children: [
-                SizedBox(
-                  width: MediaQuery.of(context).size.width * 0.3,
-                  child: CustomTextInput(
-                    label: 'Rate',
-                    controller: _rateController,
-                    icon: Icons.percent,
-                    keyboardType: TextInputType.number,
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Rate is required';
-                      }
-                      return null;
-                    },
+                  SizedBox(width: 10 * scaleFactor),
+                  Expanded(
+                    child: CustomDropdown(
+                      label: 'Unit',
+                      selectedValue: unit,
+                      items: _units,
+                      onChanged: (value) {
+                        setState(() {
+                          unit = value!;
+                        });
+                      },
+                    ),
                   ),
-                ),
-                const SizedBox(width: 8),
-                SizedBox(
-                  width: MediaQuery.of(context).size.width * 0.3,
-                  child: CustomDropdown(
-                    label: 'Tax Option',
-                    selectedValue: taxOption,
-                    items: _taxOptions,
-                    onChanged: (value) {
-                      setState(() {
-                        taxOption = value!;
-                      });
-                    },
+                ],
+              ),
+              SizedBox(height: 10 * scaleFactor),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  Expanded(
+                    child: CustomTextInput(
+                      label: 'Cost Price',
+                      controller: _costPriceController,
+                      icon: Icons.money,
+                      keyboardType: TextInputType.number,
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Cost Price is required';
+                        }
+                        return null;
+                      },
+                    ),
                   ),
-                ),
-              ],
-            ),
-          ],
+                  SizedBox(width: 8 * scaleFactor),
+                  Expanded(
+                    child: CustomTextInput(
+                      label: 'Sell Price',
+                      controller: _sellPriceController,
+                      icon: Icons.price_check,
+                      keyboardType: TextInputType.number,
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Sell Price is required';
+                        }
+                        return null;
+                      },
+                    ),
+                  ),
+                ],
+              ),
+              SizedBox(height: 10 * scaleFactor),
+              CustomTextInput(
+                label: 'From Location',
+                controller: _fromLocationController,
+                icon: Icons.location_pin,
+                keyboardType: TextInputType.streetAddress,
+                maxLines: 3,
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Location is required';
+                  }
+                  return null;
+                },
+              ),
+              SizedBox(height: 10 * scaleFactor),
+              CustomDropdown(
+                label: 'Tax Option',
+                selectedValue: taxOption,
+                items: _taxOptions,
+                onChanged: (value) {
+                  setState(() {
+                    taxOption = value!;
+                  });
+                },
+              ),
+            ],
+          ),
         ),
       ),
       actions: [
@@ -147,17 +183,29 @@ class _AddItemWidgetState extends State<AddItemWidget> {
         ElevatedButton(
           onPressed: () {
             final quantity = double.tryParse(_quantityController.text) ?? 0.0;
-            final rate = double.tryParse(_rateController.text) ?? 0.0;
-            if (_itemController.text.isNotEmpty) {
+            final costPrice = double.tryParse(_costPriceController.text) ?? 0.0;
+            final sellPrice = double.tryParse(_sellPriceController.text) ?? 0.0;
+            String location = _fromLocationController.text.trim(); 
+            print('ADD ITEM LOCAITON: $location'); 
+            if (_itemController.text.isNotEmpty &&
+                quantity > 0 &&
+                costPrice >= 0 &&
+                sellPrice >= 0) {
               Navigator.pop(context, {
                 'name': _itemController.text,
                 'quantity': quantity,
-                'rate': rate,
-                'unit': unit, // Include the unit
-                'taxOption': taxOption, // Include the tax option
+                'costPrice': costPrice,
+                'sellPrice': sellPrice,
+                'unit': unit,
+                'fromLocation': location,
+                'taxOption': taxOption,
               });
             } else {
-              Navigator.pop(context);
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('Please fill all required fields correctly'),
+                ),
+              );
             }
           },
           child: const Text('Add'),
@@ -166,4 +214,3 @@ class _AddItemWidgetState extends State<AddItemWidget> {
     );
   }
 }
-

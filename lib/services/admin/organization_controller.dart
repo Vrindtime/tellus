@@ -149,4 +149,59 @@ class OrganizationController extends GetxController {
     }
   }
 
+  Future<Map<String, dynamic>?> fetchOrgById(String orgId) async {
+    try {
+      final doc = await databases.getDocument(
+        databaseId: databaseId,
+        collectionId: orgsCollectionId,
+        documentId: orgId,
+      );
+      return {
+        'orgLogo': doc.data['orgLogo'],
+        'orgName': doc.data['orgName'],
+        'orgAddress': doc.data['orgAddress'],
+        'phoneNumber': doc.data['phoneNumbers'],
+        'orgUPI': doc.data['orgUPI'],
+        'accountHolderName': doc.data['accountHolderName'],
+        'accountNumber': doc.data['accountNumber'],
+        'accountIFSC': doc.data['accountIFSC'],
+      };
+    } catch (e) {
+      debugPrint('Error fetching organization by ID: $e');
+      return null;
+    }
+  }
+
+  Future<bool> editOrganization(String orgId, Map<String, dynamic> data) async {
+    try {
+      await databases.updateDocument(
+        databaseId: databaseId,
+        collectionId: orgsCollectionId,
+        documentId: orgId,
+        data: data,
+      );
+      return true;
+    } catch (e) {
+      Get.snackbar(
+        'Error',
+        'Failed to update organization: $e',
+      );
+      debugPrint('Error updating organization: $e');
+      return false;
+    }
+  }
+
+  Future<bool> deleteOrganization(String orgId) async {
+    try {
+      await databases.deleteDocument(
+        databaseId: databaseId,
+        collectionId: orgsCollectionId,
+        documentId: orgId,
+      );
+      return true;
+    } catch (e) {
+      debugPrint('Error deleting organization: $e');
+      return false;
+    }
+  }
 }

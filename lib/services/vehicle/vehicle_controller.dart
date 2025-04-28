@@ -1,7 +1,7 @@
 import 'package:flutter/widgets.dart';
 import 'package:get/get.dart';
 import 'package:appwrite/appwrite.dart';
-import 'package:tellus/core/helper.dart';
+import 'package:tellus/helper/helper.dart';
 import 'package:tellus/core/id.dart';
 import 'package:tellus/services/auth/auth_service.dart';
 import 'package:intl/intl.dart';
@@ -190,7 +190,7 @@ class VehicleController extends GetxController {
       );
 
       List<Map<String, String>> vehicleList = response.documents
-          .map((doc) => {'name': doc.data['registrationNumber'].toString()})
+          .map((doc) => {'name': doc.data['registrationNumber'].toString(),'id': doc.$id})
           .toList();
 
       return vehicleList

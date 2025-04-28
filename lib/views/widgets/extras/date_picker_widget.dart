@@ -3,8 +3,8 @@ import 'package:get/get.dart';
 import 'package:date_picker_plus/date_picker_plus.dart';
 import 'package:intl/intl.dart';
 
-class VehicleDatePickerTextField extends StatefulWidget {
-  const VehicleDatePickerTextField({
+class CustomDatePicker extends StatefulWidget {
+  const CustomDatePicker({
     super.key,
     required this.label,
     required this.initialDate,
@@ -18,12 +18,12 @@ class VehicleDatePickerTextField extends StatefulWidget {
   final String? Function(String?)? validator; // Changed to match TextField
 
   @override
-  VehicleDatePickerTextFieldState createState() =>
-      VehicleDatePickerTextFieldState();
+  CustomDatePickerState createState() =>
+      CustomDatePickerState();
 }
 
-class VehicleDatePickerTextFieldState
-    extends State<VehicleDatePickerTextField> {
+class CustomDatePickerState
+    extends State<CustomDatePicker> {
   DateTime? _selectedDate;
   final TextEditingController _dateController = TextEditingController();
   final DateFormat _dateFormat = DateFormat('dd-MM-yyyy');

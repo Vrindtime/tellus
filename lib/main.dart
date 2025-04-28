@@ -13,9 +13,7 @@ void main() async {
   await GetStorage.init();
 
   Client client = Client();
-  client
-      .setEndpoint(CId.endPoint)
-      .setProject(CId.project);
+  client.setEndpoint(CId.endPoint).setProject(CId.project);
 
   Account account = Account(client);
   Databases databases = Databases(client);
@@ -26,7 +24,6 @@ void main() async {
   Get.put(databases);
   Get.put(storage);
 
-  
   await Get.putAsync(() => AuthService().init());
 
   WidgetsBinding.instance.addPostFrameCallback((_) {});

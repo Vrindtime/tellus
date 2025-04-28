@@ -8,6 +8,8 @@ class TransactionListTileWidget extends StatelessWidget {
   final String startdate;
   final String? enddate;
   final Function onTap;
+  final Function? share;
+  final Function? pay;
 
   const TransactionListTileWidget({
     required this.title,
@@ -16,6 +18,8 @@ class TransactionListTileWidget extends StatelessWidget {
     required this.startdate,
     this.enddate,
     required this.onTap,
+    this.share,
+    this.pay,
     super.key,
   });
 
@@ -75,12 +79,18 @@ class TransactionListTileWidget extends StatelessWidget {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.end,
                       children: [
-                        IconButton(
-                          icon: Icon(Icons.share),
-                          onPressed: () => onTap(),
+                        (pay!=null)?IconButton(
+                          icon: Icon(Icons.request_page),
+                          onPressed: () => pay!(),
                           color: Theme.of(context).colorScheme.secondary,
                           iconSize: 20,
-                        ),
+                        ):SizedBox.shrink(),
+                        (share!=null)?IconButton(
+                          icon: Icon(Icons.share),
+                          onPressed: () => share!(),
+                          color: Theme.of(context).colorScheme.secondary,
+                          iconSize: 20,
+                        ):SizedBox.shrink(),
                         IconButton(
                           icon: Icon(Icons.arrow_forward_ios),
                           onPressed: () => onTap(),

@@ -33,6 +33,7 @@ class PartyController extends GetxController {
   var searchQuery = ''.obs; // Observable for search input
 
   TextEditingController searchController = TextEditingController();
+  Function? onDataChanged; // Callback for data changes
 
   @override
   void onInit() {
@@ -78,6 +79,7 @@ class PartyController extends GetxController {
         ),
       );
       filterParties(searchQuery.value); // Apply current search query
+      onDataChanged?.call(); // Trigger callback
     } catch (e) {
       Get.snackbar('Error', 'Failed to fetch parties: $e');
     }
@@ -121,6 +123,7 @@ class PartyController extends GetxController {
       );
       debugPrint('Party added successfully: ${party.name}');
       fetchParties();
+      onDataChanged?.call(); // Trigger callback
       Get.snackbar('Success', 'Party added successfully');
     } catch (e) {
       debugPrint('Error adding party: $e');
@@ -146,6 +149,7 @@ class PartyController extends GetxController {
       );
       debugPrint('Party updated successfully: $documentId');
       fetchParties();
+      onDataChanged?.call(); // Trigger callback
       Get.snackbar('Success', 'Party updated successfully');
     } catch (e) {
       debugPrint('Error updating party: $e');
@@ -163,6 +167,7 @@ class PartyController extends GetxController {
       );
       debugPrint('Party deleted successfully: $documentId');
       fetchParties();
+      onDataChanged?.call(); // Trigger callback
       Get.snackbar('Success', 'Party deleted successfully');
     } catch (e) {
       debugPrint('Error deleting party: $e');
@@ -185,7 +190,7 @@ class PartyController extends GetxController {
 
       List<Map<String, String>> partyList =
           response.documents
-              .map((doc) => {'name': doc.data['name'].toString()})
+              .map((doc) => {'name': doc.data['name'].toString(), 'id': doc.$id})
               .toList();
 
       return partyList
@@ -200,6 +205,27 @@ class PartyController extends GetxController {
     }
   }
 
+  Future<Map<String, dynamic>?> fetchPartyById(String partyId) async {
+    try {
+      final doc = await databases.getDocument(
+        databaseId: CId.databaseId,
+        collectionId: CId.partyCollectionId,
+        documentId: partyId,
+      );
+      return {
+        'name': doc.data['name'],
+        'phoneNumber': doc.data['phoneNumber'],
+        'gstin': doc.data['gstin'],
+        'organizationId': doc.data['organizationId'],
+        'companyName': doc.data['companyName'],
+        'location': doc.data['location'],
+        'pfp': doc.data['pfp'],
+      };
+    } catch (e) {
+      debugPrint('Error fetching organization by ID: $e');
+      return null;
+    }
+  }
 
   @override
   void onClose() {

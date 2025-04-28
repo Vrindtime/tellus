@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:page_transition/page_transition.dart';
 import 'package:tellus/services/accountant/emw_controller.dart';
+import 'package:tellus/services/accountant/general_controller.dart';
 import 'package:tellus/services/accountant/party_controller.dart';
 import 'package:tellus/services/auth/auth_service.dart';
 import 'package:tellus/services/vehicle/vehicle_controller.dart';
@@ -23,6 +24,7 @@ class CreateFinishedTaskPage extends StatefulWidget {
 
 class _CreateFinishedTaskPageState extends State<CreateFinishedTaskPage> {
   final AuthService _authService = Get.find<AuthService>();
+  final GeneralController _generalController = Get.put(GeneralController());
   final PartyController _partyController = Get.put(PartyController());
   final VehicleController _vehicleController = Get.put(VehicleController());
   final EMWBookingController bookingController = Get.put(
@@ -58,6 +60,8 @@ class _CreateFinishedTaskPageState extends State<CreateFinishedTaskPage> {
   String? rentType;
   String discountType = '%';
   String? accessories;
+  String? clientId;
+  String? vehicleId;
   bool get isEdit => widget.booking != null;
 
   @override
@@ -67,22 +71,24 @@ class _CreateFinishedTaskPageState extends State<CreateFinishedTaskPage> {
     _vehicleController.fetchVehicles();
     if (isEdit) {
       final b = widget.booking!;
-      _clientNameController.text = b.partyId;
-      _vehicleNameController.text = b.vehicleId;
+      clientId = b.partyId;
+      vehicleId = b.vehicleId;
+      _clientNameController.text = b.partyName;
+      _vehicleNameController.text = b.vehicleName;
       selectedStartDate = b.startDate;
       selectedEndDate = b.endDate;
       _additionalNotesController.text = b.notes ?? '';
-      rentType = b.rentType.isNotEmpty ? b.rentType : 'Per Hour';
-      _hoursController.text = b.quantity;
+      rentType = b.rentType!.isNotEmpty ? b.rentType : 'Per Hour';
+      _hoursController.text = b.quantity!;
       _rateController.text = b.rate.toString();
       _startMeterController.text = b.startMeter.toString();
       _endMeterController.text = b.endMeter.toString();
       _operatorBataController.text = b.operatorBata.toString();
-      _shiftingVehicleController.text = b.shiftingVehicle;
+      _shiftingVehicleController.text = b.shiftingVehicle!;
       _shiftingChargeController.text = b.shiftingVehicleCharge.toString();
       _taxController.text = b.tax.toString();
       _discountController.text = b.discount.toString();
-      discountType = b.discountType.isNotEmpty ? b.discountType : '%';
+      discountType = (b.discountType!.isNotEmpty ? b.discountType : '%')!;
       _depositController.text = b.amountDeposited.toString();
       _amountPaidController.text = b.amountPaid.toString();
       _locationController.text = b.workLocation ?? '';
@@ -125,7 +131,7 @@ class _CreateFinishedTaskPageState extends State<CreateFinishedTaskPage> {
     return Row(
       children: [
         Expanded(
-          child: VehicleDatePickerTextField(
+          child: CustomDatePicker(
             label: 'Start Date',
             initialDate: selectedStartDate,
             onDateSelected: (date) {
@@ -143,7 +149,7 @@ class _CreateFinishedTaskPageState extends State<CreateFinishedTaskPage> {
         ),
         SizedBox(width: MediaQuery.of(context).size.width * 0.03),
         Expanded(
-          child: VehicleDatePickerTextField(
+          child: CustomDatePicker(
             label: 'End Date',
             initialDate: selectedEndDate,
             onDateSelected: (date) {
@@ -292,43 +298,55 @@ class _CreateFinishedTaskPageState extends State<CreateFinishedTaskPage> {
   void _saveBooking() async {
     debugPrint('Saving booking...');
     // Print all values before sending
-    debugPrint('Client Name: \'${_clientNameController.text}\'');
-    debugPrint('Vehicle Name: \'${_vehicleNameController.text}\'');
-    debugPrint('Start Date: $selectedStartDate');
-    debugPrint('End Date: $selectedEndDate');
-    debugPrint('Notes: \'${_additionalNotesController.text}\'');
-    debugPrint('Work Location: \'${_locationController.text}\'');
-    debugPrint('Rent Type: $rentType');
-    debugPrint('Quantity: \'${_hoursController.text}\'');
-    debugPrint('Rate: \'${_rateController.text}\'');
-    debugPrint('Start Meter: \'${_startMeterController.text}\'');
-    debugPrint('End Meter: \'${_endMeterController.text}\'');
-    debugPrint('Operator Bata: \'${_operatorBataController.text}\'');
-    debugPrint('Shifting Vehicle: \'${_shiftingVehicleController.text}\'');
-    debugPrint('Shifting Vehicle Charge: \'${_shiftingChargeController.text}\'');
-    debugPrint('Tax: \'${_taxController.text}\'');
-    debugPrint('Discount: \'${_discountController.text}\'');
-    debugPrint('Discount Type: $discountType');
-    debugPrint('Deposit: \'${_depositController.text}\'');
-    debugPrint('Amount Paid: \'${_amountPaidController.text}\'');
-    debugPrint('Net Amount: ${_calculateNetAmount()}');
-    debugPrint('Created By: ${_authService.userId.value}');
-    debugPrint('Organization ID: ${_authService.orgId.value}');
+    // debugPrint('Client ID: \'${clientId}\'');
+    // debugPrint('Vehicle ID: \'${vehicleId}\'');
+    // debugPrint('Client Name: \'${_clientNameController.text}\'');
+    // debugPrint('Vehicle Name: \'${_vehicleNameController.text}\'');
+    // debugPrint('Start Date: $selectedStartDate');
+    // debugPrint('End Date: $selectedEndDate');
+    // debugPrint('Notes: \'${_additionalNotesController.text}\'');
+    // debugPrint('Work Location: \'${_locationController.text}\'');
+    // debugPrint('Rent Type: $rentType');
+    // debugPrint('Quantity: \'${_hoursController.text}\'');
+    // debugPrint('Rate: \'${_rateController.text}\'');
+    // debugPrint('Start Meter: \'${_startMeterController.text}\'');
+    // debugPrint('End Meter: \'${_endMeterController.text}\'');
+    // debugPrint('Operator Bata: \'${_operatorBataController.text}\'');
+    // debugPrint('Shifting Vehicle: \'${_shiftingVehicleController.text}\'');
+    // debugPrint('Shifting Vehicle Charge: \'${_shiftingChargeController.text}\'');
+    // debugPrint('Tax: \'${_taxController.text}\'');
+    // debugPrint('Discount: \'${_discountController.text}\'');
+    // debugPrint('Discount Type: $discountType');
+    // debugPrint('Deposit: \'${_depositController.text}\'');
+    // debugPrint('Amount Paid: \'${_amountPaidController.text}\'');
+    // debugPrint('Net Amount: ${_calculateNetAmount()}');
+    // debugPrint('Created By: ${_authService.userId.value}');
+    // debugPrint('Organization ID: ${_authService.orgId.value}');
 
     // Validate required fields
-    if (_clientNameController.text.isEmpty) {
+    if (clientId!.isEmpty || clientId == null) {
       Get.snackbar('Error', 'Please select a valid client.');
       return;
     }
-    if (_vehicleNameController.text.isEmpty) {
+    if (_clientNameController.text.isEmpty || _clientNameController.text== null) {
+      Get.snackbar('Error', 'Please select a valid client Name.');
+      return;
+    }
+    if (vehicleId!.isEmpty || vehicleId == null) {
       Get.snackbar('Error', 'Please select a valid vehicle.');
+      return;
+    }
+    if (_vehicleNameController.text.isEmpty || _vehicleNameController.text== null) {
+      Get.snackbar('Error', 'Please select a valid vehicle Name.');
       return;
     }
 
     final booking = EMWBooking(
       //Client Details
-      partyId: _clientNameController.text,
-      vehicleId: _vehicleNameController.text,
+      partyId: clientId!,
+      vehicleId: vehicleId!,
+      partyName: _clientNameController.text,
+      vehicleName: _vehicleNameController.text,
       startDate: selectedStartDate,
       endDate: selectedEndDate,
       notes: _additionalNotesController.text,
@@ -338,7 +356,7 @@ class _CreateFinishedTaskPageState extends State<CreateFinishedTaskPage> {
 
       //Charges Details
       rentType: rentType ?? 'Per Hour',
-      quantity: _hoursController.text,
+      quantity: (_hoursController.text == '')? '1' : _hoursController.text,
       rate: double.tryParse(_rateController.text) ?? 0,
       // if rentType == 'Per Hour' then:
       startMeter: double.tryParse(_startMeterController.text) ?? 0,
@@ -374,11 +392,14 @@ class _CreateFinishedTaskPageState extends State<CreateFinishedTaskPage> {
       await bookingController.createEMWFinishedBooking(booking, true);
       debugPrint('Booking saved successfully!');
     }
+
+    _generalController.refreshData();
   }
 
   void _deleteBooking() async {
     if (isEdit) {
       await bookingController.deleteEMWFinishedBooking(widget.booking!);
+      _generalController.refreshData();
       Get.back();
     }
   }
@@ -422,6 +443,12 @@ class _CreateFinishedTaskPageState extends State<CreateFinishedTaskPage> {
               suggestionsCallback: _partyController.getPartySuggestions,
               onSuggestionSelected: (suggestion) {
                 _clientNameController.text = suggestion['name']!;
+                setState(() {
+                  clientId = suggestion['id']!;
+                });
+                FocusScope.of(context).unfocus();
+                debugPrint('Selected client ID: ${_clientNameController.text}');
+                debugPrint('Selected client ID: $clientId');
               },
               icon: Icons.person,
               onIconPressed: () {
@@ -441,7 +468,11 @@ class _CreateFinishedTaskPageState extends State<CreateFinishedTaskPage> {
               suggestionsCallback: _vehicleController.getVehicleSuggestions,
               onSuggestionSelected: (suggestion) {
                 _vehicleNameController.text = suggestion['name']!;
+                setState(() {
+                  vehicleId = suggestion['id']!;
+                });
                 FocusScope.of(context).unfocus();
+                debugPrint('Selected vehcile ID: $vehicleId');
               },
               icon: Icons.directions_car,
               onIconPressed: () {

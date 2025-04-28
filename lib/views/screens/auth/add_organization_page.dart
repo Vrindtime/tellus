@@ -2,7 +2,7 @@ import 'package:animation_list/animation_list.dart';
 import 'package:appwrite/models.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:tellus/services/auth/organization_controller.dart';
+import 'package:tellus/services/admin/organization_controller.dart';
 import 'package:tellus/views/widgets/submit_button.dart';
 import 'package:tellus/views/widgets/text_input_widget.dart';
 
@@ -131,6 +131,7 @@ class _AddOrganizationModalState extends State<AddOrganizationModal> {
               setState(() {
                 isLoading = true;
               });
+              Get.back();
               // Call the controller's addOrganization method.
               Document? newOrg = await orgController.addOrganization(orgName, phoneNumbersStr, userName);
               if (newOrg != null) {
@@ -142,8 +143,7 @@ class _AddOrganizationModalState extends State<AddOrganizationModal> {
                 isLoading = false;
               });
               // Close the modal.
-              Get.back();
-              Get.appUpdate();
+              
             },
           ),
           const SizedBox(height: 20),

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:page_transition/page_transition.dart';
-import 'package:tellus/services/auth/organization_controller.dart';
+import 'package:tellus/services/admin/organization_controller.dart';
 import 'package:tellus/views/screens/auth/add_organization_page.dart';
 import 'package:tellus/views/screens/common/privacy_policy_page.dart';
 import 'package:tellus/views/widgets/submit_button.dart';
@@ -117,6 +117,7 @@ class _OrganizationPageState extends State<OrganizationPage> {
               isScrollControlled: true,
               builder: (_) => const AddOrganizationModal(),
             );
+            Get.back();
           },
           child: Text(
             'Add Organization',

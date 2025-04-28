@@ -7,6 +7,7 @@ import 'package:tellus/services/auth/auth_service.dart';
 class AdminUserController extends GetxController {
   final TextEditingController nameController = TextEditingController();
   final TextEditingController phoneController = TextEditingController();
+  final TextEditingController locationController = TextEditingController();
   final RxString selectedRole = 'admin'.obs;
   final RxList<Map<String, dynamic>> users = <Map<String, dynamic>>[].obs;
   final RxBool isLoading = false.obs; // common loading state
@@ -25,6 +26,7 @@ class AdminUserController extends GetxController {
   void resetState() {
     nameController.clear();
     phoneController.clear();
+    locationController.clear();
     selectedRole.value = 'admin';
     users.clear();
     isLoading.value = false;
@@ -33,9 +35,10 @@ class AdminUserController extends GetxController {
   Future<void> createUser() async {
     final String name = nameController.text.trim();
     final String phone = phoneController.text.trim();
+    final String location = locationController.text.trim();
     final String role = selectedRole.value;
 
-    if (name.isEmpty || phone.isEmpty || role.isEmpty) {
+    if (name.isEmpty || phone.isEmpty || location.isEmpty || role.isEmpty) {
       Get.snackbar('Error', 'All fields are required',
           snackPosition: SnackPosition.BOTTOM);
       return;
@@ -55,6 +58,7 @@ class AdminUserController extends GetxController {
         data: {
           'name': name,
           'phoneNumber': phone,
+          'location': location,
           'role': role,
           'organizationId': orgId, // Fetch actual organization ID
         },
@@ -92,6 +96,8 @@ class AdminUserController extends GetxController {
         'name': doc.data['name'],
         'role': doc.data['role'],
         'phoneNumber': doc.data['phoneNumber'],
+        'location': doc.data['location'],
+        'pfp': doc.data['pfp'],
       }).toList());
     } catch (e) {
       Get.snackbar('Error', 'Failed to fetch users: $e',
@@ -110,9 +116,10 @@ class AdminUserController extends GetxController {
 
     final String name = nameController.text.trim();
     final String phone = phoneController.text.trim();
+    final String location = locationController.text.trim();
     final String role = selectedRole.value;
 
-    if (name.isEmpty || phone.isEmpty || role.isEmpty) {
+    if (name.isEmpty || phone.isEmpty || location.isEmpty || role.isEmpty) {
       Get.snackbar('Error', 'All fields are required',
           snackPosition: SnackPosition.BOTTOM);
       return;
@@ -126,6 +133,7 @@ class AdminUserController extends GetxController {
         data: {
           'name': name,
           'phoneNumber': phone,
+          'location': location,
           'role': role,
         },
       );
@@ -182,7 +190,9 @@ class AdminUserController extends GetxController {
         'name': response.data['name'],
         'dob': response.data['dob'],
         'phoneNumber': response.data['phoneNumber'],
+        'location': response.data['location'],
         'role': response.data['role'],
+        'pfp': response.data['pfp'],
       };
     } catch (e) {
       debugPrint('Error fetching user by ID: $e');
@@ -211,6 +221,7 @@ class AdminUserController extends GetxController {
   void onClose() {
     nameController.dispose();
     phoneController.dispose();
+    locationController.dispose();
     resetState(); // Ensure state is reset on close
     super.onClose();
   }

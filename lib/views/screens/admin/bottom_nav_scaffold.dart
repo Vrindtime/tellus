@@ -8,8 +8,6 @@ import 'package:tellus/views/screens/admin/admin_dashboard_page.dart';
 import 'package:tellus/views/screens/admin/admin_setting_page.dart';
 import 'package:tellus/views/screens/admin/vehicle_managment_page.dart';
 import 'package:tellus/views/screens/common/notification_page.dart';
-import 'package:tellus/views/screens/common/common_page_name.dart';
-import 'package:tellus/views/screens/driver/settings/vehicle_settings_page.dart';
 
 class AdminBottomNavigationMenuPage extends StatefulWidget {
   const AdminBottomNavigationMenuPage({super.key});
@@ -28,33 +26,47 @@ class AdminBottomNavigationMenuPageState
     return Scaffold(
       appBar: AppBar(
         forceMaterialTransparency: true,
-        title: Text(
-          "Admin",
-          style: Theme.of(context).textTheme.titleLarge,
+        title: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text("Admin", style: Theme.of(context).textTheme.titleLarge),
+            Text(
+              "This is a demo app and will be live\n as a subscription-based app on 21st May 2025",
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                color: Theme.of(context).colorScheme.secondary,
+                fontSize: 10
+              ),
+            ),
+          ],
         ),
         automaticallyImplyLeading: false,
         backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         elevation: 0,
         actions: [
-          IconButton(onPressed: () {
-            Navigator.push(
-          context,
-          PageTransition(
-            type: PageTransitionType.topToBottom,
-            child: const NotificationPage(),
+          IconButton(
+            onPressed: () {
+              Navigator.push(
+                context,
+                PageTransition(
+                  type: PageTransitionType.topToBottom,
+                  child: const NotificationPage(),
+                ),
+              );
+            },
+            icon: Icon(
+              Icons.notifications,
+              color: Theme.of(context).colorScheme.primary,
+            ),
           ),
-        );
-          }, 
-          icon: Icon(Icons.notifications,
-            color: Theme.of(context).colorScheme.primary,),),
         ],
       ),
-      body: [
-        BillingPage(),
-        VehicleManagementPage(),
-        AdminDashboardPage(),
-        AdminSettingPage(),
-      ][_currentPage],
+      body:
+          [
+            BillingPage(),
+            VehicleManagementPage(),
+            AdminDashboardPage(),
+            AdminSettingPage(),
+          ][_currentPage],
       bottomNavigationBar: DotCurvedBottomNav(
         scrollController: _scrollController,
         hideOnScroll: true,

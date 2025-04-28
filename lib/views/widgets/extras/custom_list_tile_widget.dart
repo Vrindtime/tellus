@@ -33,16 +33,39 @@ class UserListTileWidget extends StatelessWidget {
             ),
             child: Row(
               children: [
-                CircleAvatar(
-                  radius: 20,
-                  backgroundColor: Theme.of(context).colorScheme.primary,
-                  child:
-                      avatarUrl != null
-                          ? CircleAvatar(
-                            child: Image.network(avatarUrl!),
-                          )
-                          : CircleAvatar(child: Icon(Icons.person)),
+                avatarUrl!=null?
+                Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    border: Border.all(
+                      color: Theme.of(context).colorScheme.primary,
+                      width: 1,
+                    ),
+                    image: DecorationImage(
+                      image: NetworkImage(avatarUrl!),
+                      fit: BoxFit.cover,
+                    ),
+                  ),
+                )
+                : const SizedBox(
+                  width: 40,
+                  height: 40,
+                  child: CircleAvatar(
+                    backgroundColor: Colors.grey,
+                    child: Icon(Icons.person),
+                  ),
                 ),
+                const SizedBox(height: 10),
+                // CircleAvatar(
+                //   radius: 20,
+                //   backgroundColor: Theme.of(context).colorScheme.primary,
+                //   child:
+                //       avatarUrl != null
+                //           ? Image.network(avatarUrl!)
+                //           : CircleAvatar(child: Icon(Icons.person)),
+                // ),
                 SizedBox(width: 10),
                 Expanded(
                   child: Column(
@@ -50,7 +73,9 @@ class UserListTileWidget extends StatelessWidget {
                     children: [
                       Text(
                         title,
-                        style: Theme.of(context).textTheme.titleMedium?.copyWith(fontSize: 20),
+                        style: Theme.of(
+                          context,
+                        ).textTheme.titleMedium?.copyWith(fontSize: 20),
                       ),
                       const SizedBox(height: 4),
                       Text(

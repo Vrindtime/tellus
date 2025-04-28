@@ -1,6 +1,8 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:tellus/core/id.dart';
+import 'package:tellus/helper/helper.dart';
 import 'package:tellus/views/widgets/submit_button.dart';
 import 'package:tellus/views/widgets/text_input_widget.dart';
 import 'package:get/get.dart';
@@ -11,14 +13,15 @@ class AdminProfileSettingsPage extends StatefulWidget {
   const AdminProfileSettingsPage({super.key});
 
   @override
-  AdminProfileSettingsPageState createState() => AdminProfileSettingsPageState();
+  AdminProfileSettingsPageState createState() =>
+      AdminProfileSettingsPageState();
 }
 
 class AdminProfileSettingsPageState extends State<AdminProfileSettingsPage> {
   final _formKey = GlobalKey<FormState>();
   final ImagePicker _picker = ImagePicker();
 
-  File? _profileImage;
+  String newPfpUrl = '';
   String? fullName;
   String? phoneNumber;
 
@@ -26,11 +29,12 @@ class AdminProfileSettingsPageState extends State<AdminProfileSettingsPage> {
   final TextEditingController _roleController = TextEditingController();
   final TextEditingController _phoneController = TextEditingController();
   final TextEditingController _idController = TextEditingController();
+  final TextEditingController _locationController = TextEditingController();
 
   var isLoading = false;
 
   final AuthService _authService = Get.find<AuthService>();
-  final AdminUserController _adminController = Get.find<AdminUserController>();
+  final AdminUserController _adminController = Get.put(AdminUserController());
   String get userId => _authService.userId.value;
   @override
   void initState() {
@@ -47,7 +51,10 @@ class AdminProfileSettingsPageState extends State<AdminProfileSettingsPage> {
           _nameController.text = user['name'] ?? '';
           _roleController.text = user['role'] ?? '';
           _phoneController.text = user['phoneNumber'] ?? '';
+          _locationController.text = user['location'] ?? '';
+          newPfpUrl = user['pfp'] ?? '';
         });
+        debugPrint('DEBUG : Org Logo: $newPfpUrl');
       }
     }
   }
@@ -58,6 +65,7 @@ class AdminProfileSettingsPageState extends State<AdminProfileSettingsPage> {
     _roleController.dispose();
     _phoneController.dispose();
     _idController.dispose();
+    _locationController.dispose();
     super.dispose();
   }
 
@@ -82,28 +90,51 @@ class AdminProfileSettingsPageState extends State<AdminProfileSettingsPage> {
               spacing: 20,
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                SizedBox(
-                  height: MediaQuery.of(context).size.height * 0.03,
-                ),
+                SizedBox(height: MediaQuery.of(context).size.height * 0.03),
+                //PROFILE IMAGE
                 GestureDetector(
                   onTap: () async {
                     final pickedFile = await _picker.pickImage(
                       source: ImageSource.gallery,
                     );
-                    setState(() {
-                      _profileImage =
-                          pickedFile != null ? File(pickedFile.path) : null;
-                    });
+                    if (pickedFile != null) {
+                      setState(() {
+                        isLoading = true;
+                      });
+                      final url = await saveImageAndGetUrl(
+                        file: XFile(pickedFile.path),
+                        bucketId: CId.userPfpBucketId,
+                      );
+                      if (url != null) {
+                        setState(() {
+                          // _orgLogo = File(pickedFile.path);
+                          newPfpUrl = url;
+                          isLoading = false;
+                        });
+                      }
+                    }
                   },
-                  child: _profileImage == null
-                      ? CircleAvatar(
-                          radius: 80,
-                          child: Icon(Icons.camera_alt),
-                        )
-                      : CircleAvatar(
-                          radius: 80,
-                          backgroundImage: FileImage(File(_profileImage!.path)),
-                        ),
+                  child: Container(
+                    width: 160,
+                    height: 160,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(24),
+                      border: Border.all(color: Colors.grey, width: 2),
+                      color: Colors.grey[200],
+                    ),
+                    child:
+                        newPfpUrl!.isEmpty
+                            ? Icon(Icons.camera_alt, size: 48)
+                            : ClipRRect(
+                              borderRadius: BorderRadius.circular(24),
+                              child: Image.network(
+                                newPfpUrl,
+                                width: 160,
+                                height: 160,
+                                fit: BoxFit.cover,
+                              ),
+                            ),
+                  ),
                 ),
                 CustomTextInput(
                   label: "User ID",
@@ -147,6 +178,19 @@ class AdminProfileSettingsPageState extends State<AdminProfileSettingsPage> {
                   },
                 ),
                 CustomTextInput(
+                  label: "Location",
+                  controller: _locationController,
+                  keyboardType: TextInputType.text,
+                  icon: Icons.location_on,
+                  onSaved: (value) {},
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Please enter your location';
+                    }
+                    return null;
+                  },
+                ),
+                CustomTextInput(
                   label: "Role",
                   controller: _roleController,
                   keyboardType: TextInputType.text,
@@ -157,23 +201,22 @@ class AdminProfileSettingsPageState extends State<AdminProfileSettingsPage> {
                 SubmitButton(
                   text: "Save",
                   isLoading: isLoading,
-                  onTap: () async{
-                    if (_formKey.currentState!.validate()) {
-                      _formKey.currentState!.save();
-                      // Save the form data
-                      setState(() {
-                        isLoading = true;
-                      });
-                      final data = {
-                        'name': _nameController.text,
-                        'phoneNumber': _phoneController.text,
-                      };
-                      await _adminController.saveUser(userId, data);
-                      setState(() {
-                        isLoading = false;
-                      });
-                      
-                    }
+                  onTap: () async {
+                    _formKey.currentState!.save();
+                    // Save the form data
+                    setState(() {
+                      isLoading = true;
+                    });
+                    final data = {
+                      'name': _nameController.text,
+                      'phoneNumber': _phoneController.text,
+                      'location': _locationController.text,
+                      'pfp': newPfpUrl,
+                    };
+                    await _adminController.saveUser(userId, data);
+                    setState(() {
+                      isLoading = false;
+                    });
                   },
                 ),
               ],

@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:lottie/lottie.dart';
 import 'package:tellus/services/auth/login_controller.dart';
-import 'package:tellus/services/auth/organization_controller.dart';
+import 'package:tellus/services/admin/organization_controller.dart';
+import 'package:tellus/views/widgets/dropdown_widget.dart';
 import 'package:tellus/views/widgets/phone_input_widget.dart';
 import 'package:tellus/views/widgets/submit_button.dart';
 
@@ -11,6 +12,9 @@ class LoginPage extends StatelessWidget {
 
   final LoginController loginController = Get.put(LoginController());
   final TextEditingController phoneController = TextEditingController();
+
+  String selectedCountryCode = '+91';
+  List<String> countryCodeList = ['+91', '+1', '+971', '+968', '+44', '+1', '+49'];
 
   @override
   Widget build(BuildContext context) {
@@ -44,6 +48,15 @@ class LoginPage extends StatelessWidget {
                 "Sign in with phone number",
                 style: Theme.of(context).textTheme.labelSmall,
               ),
+              // Expanded(child:
+              CustomDropdown(
+                label: 'Country Code',
+                selectedValue: selectedCountryCode,
+                items: countryCodeList,
+                onChanged: (value) {
+                  selectedCountryCode = value!;
+                },
+              ),
               PhoneValidInput(inputController: phoneController),
               Obx(
                 () => SubmitButton(
@@ -55,8 +68,10 @@ class LoginPage extends StatelessWidget {
                       Get.snackbar('Error', 'Please enter a phone number');
                       return;
                     }
-                    loginController.phoneNumber.value = '+91${phoneController.text}';
-                    String selectedOrg = Get.find<OrganizationController>().selectedOrg.value;
+                    loginController.phoneNumber.value =
+                        '$selectedCountryCode${phoneController.text}';
+                    String selectedOrg =
+                        Get.find<OrganizationController>().selectedOrg.value;
                     loginController.sendOTP(selectedOrg);
                   },
                 ),

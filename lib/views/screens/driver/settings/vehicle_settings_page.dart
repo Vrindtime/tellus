@@ -18,7 +18,6 @@ class VehicleSettingsPage extends StatefulWidget {
 }
 
 class _VehicleSettingsPageState extends State<VehicleSettingsPage> {
-  final _formKey = GlobalKey<FormState>();
   final VehicleController _vehicleController = Get.find<VehicleController>();
 
   File? _image;
@@ -37,6 +36,8 @@ class _VehicleSettingsPageState extends State<VehicleSettingsPage> {
   final TextEditingController _meterController = TextEditingController();
   final TextEditingController _modelYearController = TextEditingController();
   final TextEditingController _companyNameController = TextEditingController();
+
+  final _formKey = GlobalKey<FormState>();
 
   @override
   void initState() {
@@ -142,7 +143,7 @@ class _VehicleSettingsPageState extends State<VehicleSettingsPage> {
                     return null;
                   },
                 ),
-                VehicleDatePickerTextField(
+                CustomDatePicker(
                   label: "Age of Vehicle",
                   initialDate: widget.vehicle != null
                       ? widget.vehicle!.ageOfVehicle
@@ -231,7 +232,7 @@ class _VehicleSettingsPageState extends State<VehicleSettingsPage> {
                   text: widget.vehicle == null ? "Add Vehicle" : "Update Vehicle",
                   onTap: () {
                     // if (_formKey.currentState!.validate()) {
-                      _formKey.currentState!.save();
+                      
                       try {
                         Vehicle vehicle = Vehicle(
                           documentId: widget.vehicle?.documentId ?? '',

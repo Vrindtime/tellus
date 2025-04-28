@@ -60,13 +60,13 @@ class OtpPage extends StatelessWidget {
                         },
                       ),
                     ),
-                    GestureDetector(
-                      onTap:() => otpVerificationController.resendOTP(),
-                      child: Text(
-                        'Didn\'t receive the code? Resend',
-                        style: Theme.of(context).textTheme.bodySmall,
-                      ),
-                    ),
+                    // GestureDetector(
+                    //   onTap:() => otpVerificationController.resendOTP(),
+                    //   child: Text(
+                    //     'Didn\'t receive the code? Resend',
+                    //     style: Theme.of(context).textTheme.bodySmall,
+                    //   ),
+                    // ),
                   ],
                 ),
               ),

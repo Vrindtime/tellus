@@ -3,8 +3,8 @@ import 'package:get/get.dart';
 import 'package:date_picker_plus/date_picker_plus.dart';
 
 class DatePickerTextField extends StatefulWidget {
-  const DatePickerTextField({super.key});
-  
+  const DatePickerTextField({super.key, this.controller});
+  final TextEditingController? controller;
   @override
   _DatePickerTextFieldState createState() => _DatePickerTextFieldState();
 }

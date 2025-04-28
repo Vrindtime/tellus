@@ -1,41 +1,67 @@
 import 'package:flutter/material.dart';
-import 'package:page_transition/page_transition.dart';
+import 'package:get/get.dart';
 import 'package:intl/intl.dart';
+import 'package:tellus/helper/consumer_invoice.dart';
+import 'package:tellus/services/accountant/party_controller.dart';
+import 'package:tellus/services/accountant/payment_in_controller.dart';
+import 'package:tellus/services/admin/organization_controller.dart';
+import 'package:tellus/services/auth/auth_service.dart';
 import 'package:tellus/views/widgets/custom_size_button.dart';
 import 'package:tellus/views/widgets/date_picker_widget.dart';
+import 'package:tellus/views/widgets/extras/date_picker_widget.dart';
 import 'package:tellus/views/widgets/text_input_widget.dart';
 import 'package:tellus/views/widgets/dropdown_widget.dart';
 import 'package:tellus/views/widgets/search_text_field_widget.dart';
 
 class PaymentInPage extends StatefulWidget {
-  const PaymentInPage({super.key});
+  final PaymentInModel? paymentInModel; // Add parameter for editing
+  const PaymentInPage({super.key, this.paymentInModel});
 
   @override
   State<PaymentInPage> createState() => _PaymentInPageState();
 }
 
 class _PaymentInPageState extends State<PaymentInPage> {
-  final TextEditingController _referenceController = TextEditingController();
+  final PartyController _partyController = PartyController();
+  final AuthService authService = Get.find<AuthService>();
+  final PaymentInController _paymentInController = PaymentInController();
+
   final TextEditingController _customerNameController = TextEditingController();
-  final TextEditingController _receivedAmountController = TextEditingController();
+  final TextEditingController _customerNameIdController =
+      TextEditingController();
+  final TextEditingController _receivedAmountController =
+      TextEditingController();
+
   String paymentType = 'Cash';
+  DateTime selectedDate = DateTime.now();
 
   final List<String> _paymentTypes = ['Cash', 'Cheque', 'UPI', 'Bank'];
+  
 
   @override
   void initState() {
     super.initState();
-    _referenceController.text =
-        'PAY-${DateFormat('yyyy-MM').format(DateTime.now())}-0001';
+    // Pre-fill form if paymentInModel is provided
+    if (widget.paymentInModel != null) {
+      final model = widget.paymentInModel!;
+      _customerNameController.text = model.customerName;
+      _customerNameIdController.text = model.customerId;
+      _receivedAmountController.text = model.receivedAmount.toString();
+      paymentType = model.paymentType;
+      selectedDate = DateFormat(
+        'yyyy-MM-dd',
+      ).parse(model.date.toIso8601String());
+    }
   }
 
-  Future<List<Map<String, String>>> _getCustomerSuggestions(String query) async {
-    // Replace with actual customer name suggestions logic
-    return [
-      {'name': 'John Doe', 'category': 'Regular Customer'},
-      {'name': 'Jane Smith', 'category': 'Premium Customer'},
-      {'name': 'Alice Johnson', 'category': 'New Customer'},
-    ].where((customer) => customer['name']!.toLowerCase().contains(query.toLowerCase())).toList();
+  void _clearForm() {
+    _customerNameController.clear();
+    _customerNameIdController.clear();
+    _receivedAmountController.clear();
+    setState(() {
+      paymentType = 'Cash';
+      selectedDate = DateTime.now();
+    });
   }
 
   @override
@@ -51,6 +77,51 @@ class _PaymentInPageState extends State<PaymentInPage> {
         ),
         centerTitle: true,
         forceMaterialTransparency: true,
+        actions: [
+          if (widget.paymentInModel != null)
+            IconButton(
+              icon: Icon(
+                Icons.delete,
+                color: Theme.of(context).colorScheme.error,
+              ),
+              onPressed: () async {
+                final confirmDelete = await showDialog(
+                  context: context,
+                  builder:
+                      (context) => AlertDialog(
+                        title: Text('Confirm Delete'),
+                        content: Text(
+                          'Are you sure you want to delete this payment?',
+                        ),
+                        actions: [
+                          TextButton(
+                            onPressed: () => Navigator.of(context).pop(false),
+                            child: Text('Cancel'),
+                          ),
+                          TextButton(
+                            onPressed: () {
+                              Navigator.of(context).pop(true);
+                            },
+                            child: Text(
+                              'Delete',
+                              style: TextStyle(
+                                color: Theme.of(context).colorScheme.error,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                );
+
+                if (confirmDelete == true) {
+                  await _paymentInController.deletePaymentIn(
+                    widget.paymentInModel!.id!,
+                  );
+                  Navigator.pop(context);
+                }
+              },
+            ),
+        ],
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -58,26 +129,21 @@ class _PaymentInPageState extends State<PaymentInPage> {
           mainAxisAlignment: MainAxisAlignment.start,
           children: [
             const SizedBox(height: 16),
-            CustomTextInput(
-              label: 'Reference Number',
-              controller: _referenceController,
-              icon: Icons.numbers,
-              validator: (value) {
-                if (value == null || value.isEmpty) {
-                  return 'Reference number is required';
-                }
-                return null;
+            CustomDatePicker(
+              label: 'Date',
+              initialDate: DateTime.now(),
+              onDateSelected: (date) {
+                selectedDate = date;
               },
             ),
             const SizedBox(height: 16),
-            DatePickerTextField(),
-            const SizedBox(height: 16),
             SearchTextField(
-              label: 'Customer Name',
+              label: 'Search Client Name',
               controller: _customerNameController,
-              suggestionsCallback: _getCustomerSuggestions,
+              suggestionsCallback: _partyController.getPartySuggestions,
               onSuggestionSelected: (suggestion) {
                 _customerNameController.text = suggestion['name']!;
+                _customerNameIdController.text = suggestion['id']!;
               },
             ),
             const SizedBox(height: 16),
@@ -105,27 +171,87 @@ class _PaymentInPageState extends State<PaymentInPage> {
               },
             ),
             const Spacer(),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                CustomSubmitButton(
-                  text: 'Save & New',
-                  isLoading: false,
-                  onTap: () {
-                    // Handle Save & New logic
-                  },
-                  width: width * 0.38,
-                  backgroundColor: Theme.of(context).colorScheme.secondary,
-                ),
-                CustomSubmitButton(
-                  text: 'Save',
-                  isLoading: false,
-                  onTap: () {
-                    // Handle Save logic
-                  },
-                  width: width * 0.2,
-                ),
-              ],
+            Obx(
+              () => Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children:
+                    widget.paymentInModel != null
+                        ? [
+                          CustomSubmitButton(
+                            text: 'Update',
+                            isLoading: _paymentInController.isLoading.value,
+                            onTap: () async {
+                              final updatedModel = PaymentInModel(
+                                id: widget.paymentInModel!.id,
+                                organizationId: authService.orgId.value,
+                                customerId: _customerNameIdController.text,
+                                customerName: _customerNameController.text,
+                                receivedAmount:
+                                    double.tryParse(
+                                      _receivedAmountController.text,
+                                    ) ??
+                                    0.0,
+                                paymentType: paymentType,
+                                date: selectedDate,
+                              );
+
+                              await _paymentInController.updatePaymentIn(
+                                updatedModel,
+                                widget.paymentInModel!.id!,
+                              );
+                              Navigator.pop(context);
+                            },
+                            width: MediaQuery.of(context).size.width * 0.6,
+                          ),
+                        ]
+                        : [
+                          CustomSubmitButton(
+                            text: 'Save & New',
+                            isLoading: _paymentInController.isLoading.value,
+                            onTap: () async {
+                              final newModel = PaymentInModel(
+                                organizationId: authService.orgId.value,
+                                customerId: _customerNameIdController.text,
+                                customerName: _customerNameController.text,
+                                receivedAmount:
+                                    double.tryParse(
+                                      _receivedAmountController.text,
+                                    ) ??
+                                    0.0,
+                                paymentType: paymentType,
+                                date: selectedDate,
+                              );
+
+                              await _paymentInController.addPaymentIn(newModel);
+                              _clearForm();
+                            },
+                            width: MediaQuery.of(context).size.width * 0.4,
+                          ),
+                          const SizedBox(width: 16),
+                          CustomSubmitButton(
+                            text: 'Save',
+                            isLoading: _paymentInController.isLoading.value,
+                            onTap: () async {
+                              final newModel = PaymentInModel(
+                                organizationId: authService.orgId.value,
+                                customerId: _customerNameIdController.text,
+                                customerName: _customerNameController.text,
+                                receivedAmount:
+                                    double.tryParse(
+                                      _receivedAmountController.text,
+                                    ) ??
+                                    0.0,
+                                paymentType: paymentType,
+                                date: selectedDate,
+                              );
+
+                              await _paymentInController.addPaymentIn(newModel);
+                              Navigator.pop(context);
+                            },
+                            width: MediaQuery.of(context).size.width * 0.4,
+                          ),
+                        ],
+              ),
             ),
           ],
         ),

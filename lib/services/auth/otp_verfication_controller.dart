@@ -6,7 +6,7 @@ import 'package:get_storage/get_storage.dart';
 import 'package:tellus/services/auth/auth_gate.dart';
 import 'package:tellus/services/auth/auth_service.dart';
 import 'package:tellus/services/auth/login_controller.dart';
-import 'package:tellus/services/auth/organization_controller.dart';
+import 'package:tellus/services/admin/organization_controller.dart';
 
 class OtpVerificationController extends GetxController {
   final AuthService authService = Get.find<AuthService>();

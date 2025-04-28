@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:page_transition/page_transition.dart';
 import 'package:tellus/services/accountant/emw_controller.dart'; // Provides EMWBooking and EMWBookingController
+import 'package:tellus/services/accountant/general_controller.dart';
 import 'package:tellus/services/auth/auth_service.dart';
 import 'package:tellus/services/vehicle/vehicle_controller.dart';
 import 'package:tellus/views/screens/accountant/party_details_page.dart';
@@ -22,6 +23,7 @@ class CreateTaskPage extends StatefulWidget {
 class _CreateTaskPageState extends State<CreateTaskPage> {
   // --- Dependencies ---
   final AuthService _authService = Get.find<AuthService>();
+  final GeneralController _generalController = Get.put(GeneralController());
   final PartyController _partyController = Get.put(PartyController());
   final VehicleController _vehicleController = Get.put(VehicleController());
   final EMWBookingController _emwBookingController = Get.put(EMWBookingController());
@@ -84,11 +86,11 @@ class _CreateTaskPageState extends State<CreateTaskPage> {
   /// Validates required fields and builds the EMWBooking object.
   /// Returns null if validation fails.
   EMWBooking? _validateAndCreateBookingData() {
-    if (_clientNameController.text == null || _clientNameController.text.isEmpty) {
+    if (_selectedPartyId == null ||_clientNameController.text == null || _clientNameController.text.isEmpty) {
        Get.snackbar('Error', 'Please select a Client Name from the suggestions.', snackPosition: SnackPosition.BOTTOM);
        return null;
     }
-    if (_vehicleControllerField.text == null || _vehicleControllerField.text.isEmpty) {
+    if (_selectedVehicleId == null || _vehicleControllerField.text == null || _vehicleControllerField.text.isEmpty) {
        Get.snackbar('Error', 'Please select a Vehicle from the suggestions.', snackPosition: SnackPosition.BOTTOM);
        return null;
     }
@@ -100,9 +102,14 @@ class _CreateTaskPageState extends State<CreateTaskPage> {
 
 
     return EMWBooking(
+
       // IDs from state variables
-      partyId: _clientNameController.text,
-      vehicleId: _vehicleControllerField.text,
+      partyId: _selectedPartyId!,
+      vehicleId: _selectedVehicleId!,
+
+      // Name from state variables
+      partyName: _clientNameController.text,
+      vehicleName: _vehicleControllerField.text,
 
       // Date and basic info from UI
       startDate: _selectedDate,
@@ -156,8 +163,9 @@ class _CreateTaskPageState extends State<CreateTaskPage> {
       if (!navigateBack && mounted) { // Check mounted before calling _clearForm
          _clearForm();
       }
-      // If navigateBack is true, the controller's Get.back() will handle navigation.
 
+      // If navigateBack is true, the controller's Get.back() will handle navigation.
+      _generalController.refreshData();
     } catch (e) {
       // Error snackbar is handled by the controller, but log locally too.
       print("Error caught in UI during save booking: $e");
@@ -193,6 +201,7 @@ class _CreateTaskPageState extends State<CreateTaskPage> {
                     _clientNameController.text = suggestion['name']!;
                     setState(() {
                       _selectedPartyId = suggestion['id'];
+                      print('selected client ID DEBUG: $_selectedPartyId');
                     });
                     FocusScope.of(context).unfocus(); // Hide keyboard
                   },
@@ -238,6 +247,7 @@ class _CreateTaskPageState extends State<CreateTaskPage> {
                     _vehicleControllerField.text = suggestion['name']!;
                     setState(() {
                        _selectedVehicleId = suggestion['id'];
+                       print('selected vehicle ID DEBUG: $_selectedVehicleId');
                     });
                     FocusScope.of(context).unfocus();
                   },
@@ -270,7 +280,7 @@ class _CreateTaskPageState extends State<CreateTaskPage> {
           const SizedBox(height: _spacingValue),
 
           // Date Picker
-          VehicleDatePickerTextField( // Ensure this widget visually updates on state change
+          CustomDatePicker( // Ensure this widget visually updates on state change
             label: 'Select Date *',
             initialDate: _selectedDate,
             onDateSelected: (date) {

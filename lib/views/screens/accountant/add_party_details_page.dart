@@ -1,8 +1,8 @@
-import 'dart:io';
-import 'package:appwrite/appwrite.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:tellus/core/id.dart';
+import 'package:tellus/helper/helper.dart';
+import 'package:tellus/services/accountant/general_controller.dart';
 import 'package:tellus/services/accountant/party_controller.dart';
 import 'package:tellus/views/widgets/custom_size_button.dart';
 import 'package:tellus/views/widgets/text_input_widget.dart';
@@ -18,13 +18,17 @@ class AddPartyDetailsPage extends StatefulWidget {
 }
 
 class _AddPartyDetailsPageState extends State<AddPartyDetailsPage> {
+  final ImagePicker _picker = ImagePicker();
+
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _phoneController = TextEditingController();
   final TextEditingController _gstinController = TextEditingController();
   final TextEditingController _companyNameController = TextEditingController();
   final TextEditingController _locationController = TextEditingController();
-  File? selectedImage;
-  String? newPfpId;
+
+  final GeneralController _generalController = Get.put(GeneralController());
+
+  String newPfpUrl = '';
   bool isLoading = false;
 
   @override
@@ -35,30 +39,8 @@ class _AddPartyDetailsPageState extends State<AddPartyDetailsPage> {
       _phoneController.text = widget.party!.phoneNumber;
       _gstinController.text = widget.party!.gstin ?? '';
       _companyNameController.text = widget.party!.companyName ?? '';
-      _locationController.text = widget.party!.location?? '';
-    }
-  }
-
-  Future<void> pickAndUploadImage() async {
-    final picker = ImagePicker();
-    final pickedFile = await picker.pickImage(source: ImageSource.gallery);
-    if (pickedFile != null) {
-      setState(() {
-        selectedImage = File(pickedFile.path);
-      });
-      try {
-        final storage = Get.find<Storage>();
-        final file = await storage.createFile(
-          bucketId: CId.partyPfpBucketId, // Replace with your bucket ID
-          fileId: 'unique()',
-          file: InputFile.fromPath(path: pickedFile.path),
-        );
-        setState(() {
-          newPfpId = file.$id;
-        });
-      } catch (e) {
-        Get.snackbar('Error', 'Failed to upload image: $e');
-      }
+      _locationController.text = widget.party!.location ?? '';
+      newPfpUrl = widget.party!.pfp ?? '';
     }
   }
 
@@ -89,6 +71,7 @@ class _AddPartyDetailsPageState extends State<AddPartyDetailsPage> {
                         await partyController.deleteParty(
                           widget.party!.documentId,
                         );
+                        _generalController.refreshData();
                         Navigator.pop(context);
                       } catch (e) {
                         Get.snackbar('Error', 'Failed to delete party: $e');
@@ -106,6 +89,54 @@ class _AddPartyDetailsPageState extends State<AddPartyDetailsPage> {
         child: SingleChildScrollView(
           child: Column(
             children: [
+              GestureDetector(
+                onTap: () async {
+                  final pickedFile = await _picker.pickImage(
+                    source: ImageSource.gallery,
+                  );
+                  if (pickedFile != null) {
+                    setState(() {
+                      isLoading = true;
+                    });
+                    // Use the pickedFile.path directly,
+                    final url = await saveImageAndGetUrl(
+                      file: XFile(pickedFile.path),
+                      bucketId: CId.partyPfpBucketId,
+                    );
+                    if (url != null) {
+                      setState(() {
+                        newPfpUrl = url;
+                        isLoading = false;
+                      });
+                    }
+                  }
+                },
+                child: Container(
+                  width: 160,
+                  height: 160,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(24),
+                    border: Border.all(color: Colors.grey, width: 2),
+                    color: Colors.grey[200],
+                  ),
+                  child:
+                      newPfpUrl.isEmpty
+                          ? Icon(Icons.camera_alt, size: 48)
+                          : ClipRRect(
+                            borderRadius: BorderRadius.circular(24),
+                            child: Image.network(
+                              newPfpUrl,
+                              width: 160,
+                              height: 160,
+                              fit: BoxFit.cover,
+                              errorBuilder:
+                                  (context, error, stackTrace) =>
+                                      Icon(Icons.broken_image, size: 48),
+                            ),
+                          ),
+                ),
+              ),
+              const SizedBox(height: 16),
               CustomTextInput(
                 label: 'Full Name',
                 controller: _nameController,
@@ -158,28 +189,6 @@ class _AddPartyDetailsPageState extends State<AddPartyDetailsPage> {
                 },
               ),
               const SizedBox(height: 16),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text('Profile Picture', style: TextStyle(fontSize: 16)),
-                  SizedBox(height: 8),
-                  Container(
-                    height: 100,
-                    width: 100,
-                    decoration: BoxDecoration(
-                      color: Colors.grey[200],
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: _buildPfpWidget(),
-                  ),
-                  SizedBox(height: 8),
-                  ElevatedButton(
-                    onPressed: pickAndUploadImage,
-                    child: Text('Upload Image'),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 16),
               CustomSubmitButton(
                 text: 'Save',
                 isLoading: isLoading,
@@ -208,7 +217,10 @@ class _AddPartyDetailsPageState extends State<AddPartyDetailsPage> {
                             ? null
                             : _companyNameController.text,
                     location: _locationController.text,
-                    pfp: newPfpId ?? widget.party?.pfp,
+                    pfp:
+                        newPfpUrl.isEmpty
+                            ? null
+                            : newPfpUrl, // Save only fileId
                   );
 
                   setState(() {
@@ -225,6 +237,7 @@ class _AddPartyDetailsPageState extends State<AddPartyDetailsPage> {
                         party,
                       );
                     }
+                    _generalController.refreshData();
                     Navigator.pop(context);
                   } catch (e) {
                     Get.snackbar('Error', 'Failed to save party: $e');
@@ -241,17 +254,4 @@ class _AddPartyDetailsPageState extends State<AddPartyDetailsPage> {
       ),
     );
   }
-
-  Widget _buildPfpWidget() {
-    if (selectedImage != null) {
-      return Image.file(selectedImage!, fit: BoxFit.cover);
-    } else if (widget.party?.pfp != null) {
-      final partyController = Get.find<PartyController>();
-      final previewUrl = partyController.getPreviewUrl(widget.party!.pfp!);
-      return Image.network(previewUrl, fit: BoxFit.cover);
-    } else {
-      return Icon(Icons.person, size: 50, color: Colors.grey);
-    }
-  }
-
 }

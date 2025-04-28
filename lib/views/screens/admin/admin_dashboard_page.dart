@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:page_transition/page_transition.dart';
+import 'package:tellus/views/screens/accountant/manage_expense.dart';
 import 'package:tellus/views/screens/accountant/party_details_page.dart';
-import 'package:tellus/views/screens/admin/task/assign_task_page.dart';
+import 'package:tellus/views/screens/accountant/report_page.dart';
 import 'package:tellus/views/screens/admin/create_user_page.dart';
 import 'package:tellus/views/screens/common/common_page_name.dart';
 import 'package:tellus/views/screens/common/quick_link_widget.dart';
@@ -55,14 +56,14 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                   },
                 ),
                 QuickLinkWidget(
-                  icon: Icons.task,
-                  label: "Assign Work",
+                  icon: Icons.money_off,
+                  label: "Manage Expenses",
                   onTap: () {
                     Navigator.push(
                       context,
                       PageTransition(
                         type: PageTransitionType.rightToLeftJoined,
-                        child: AssignTaskPage(),
+                        child: ExpenseManagementPage(),
                         childCurrent: const AdminDashboardPage(),
                       ),
                     );
@@ -82,7 +83,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                       context,
                       PageTransition(
                         type: PageTransitionType.rightToLeftJoined,
-                        child: const PartyDetailsPage(isAdmin: true,),
+                        child: const PartyDetailsPage(),
                         childCurrent: const AdminDashboardPage(),
                       ),
                     );
@@ -96,9 +97,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                       context,
                       PageTransition(
                         type: PageTransitionType.rightToLeftJoined,
-                        child: const CommonPage(
-                          pagename: 'Assign Task to drivers page',
-                        ),
+                        child: ReportPage(),
                         childCurrent: const AdminDashboardPage(),
                       ),
                     );
@@ -165,7 +164,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                       final username = users[index]['name'];
                       final role = users[index]['role'];
                       final phone = users[index]['phoneNumber'];
-                      final avatarIcon = 'IMG';
+                      final avatarIcon = users[index]['pfp'];
                       // debugPrint('--- User Name from Admin DashBaord: $username');
                       // debugPrint('--- User ID from Admin DashBaord: $userId');
                       // debugPrint('--- User phone from Admin DashBaord: $phone');
@@ -173,7 +172,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                       return UserListTileWidget(
                         title: username,
                         subtitle: role,
-                        avatarUrl: null,
+                        avatarUrl: avatarIcon,
                         onTap: () {
                           final user = users[index];
                           if (user.isNotEmpty) {

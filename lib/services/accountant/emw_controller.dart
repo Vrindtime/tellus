@@ -10,6 +10,9 @@ class EMWBooking {
   // Client Details
   final String partyId; // ID of the client (party) associated with the booking
   final String vehicleId; // ID of the vehicle assigned to the booking
+  final String
+  partyName; // ID of the client (party) associated with the booking
+  final String vehicleName; // ID of the vehicle assigned to the booking
   final DateTime startDate; // Start date and time of the booking
   final DateTime endDate; // End date and time of the booking
   final String? notes; // Additional notes for the booking
@@ -17,24 +20,25 @@ class EMWBooking {
   final String organizationId; // ID of the organization managing the booking
 
   // Charges Details
-  final String rentType; // Type of rental (e.g., Per Hour, Fixed)
-  final String quantity; // Quantity (e.g., hours or units) for the booking
-  final double rate; // Rate per unit (e.g., rate per hour)
-  final double startMeter; // Starting meter reading (used for Per Hour rent type)
-  final double endMeter; // Ending meter reading (used for Per Hour rent type)
+  final String? rentType; // Type of rental (e.g., Per Hour, Fixed)
+  final String? quantity; // Quantity (e.g., hours or units) for the booking
+  final double? rate; // Rate per unit (e.g., rate per hour)
+  final double?
+  startMeter; // Starting meter reading (used for Per Hour rent type)
+  final double? endMeter; // Ending meter reading (used for Per Hour rent type)
 
   // Shifting Details
-  final double operatorBata; // Operator's bata charge
-  final String shiftingVehicle; // ID or name of the shifting vehicle
-  final double shiftingVehicleCharge; // Charge for the shifting vehicle
+  final double? operatorBata; // Operator's bata charge
+  final String? shiftingVehicle; // ID or name of the shifting vehicle
+  final double? shiftingVehicleCharge; // Charge for the shifting vehicle
 
   // Payment Details
-  final double tax; // Tax amount applied to the booking
-  final double discount; // Discount amount or percentage
-  final String discountType; // Type of discount (e.g., %, Rs)
-  final double amountDeposited; // Amount deposited by the client
-  final double netAmount; // Net amount after all calculations
-  final double amountPaid; // Amount paid by the client
+  final double? tax; // Tax amount applied to the booking
+  final double? discount; // Discount amount or percentage
+  final String? discountType; // Type of discount (e.g., %, Rs)
+  final double? amountDeposited; // Amount deposited by the client
+  final double? netAmount; // Net amount after all calculations
+  final double? amountPaid; // Amount paid by the client
 
   // Status of the Invoice
   final String status; // Current status of the booking (e.g., finished)
@@ -45,6 +49,8 @@ class EMWBooking {
     this.id,
     required this.partyId,
     required this.vehicleId,
+    required this.partyName,
+    required this.vehicleName,
     required this.startDate,
     required this.endDate,
     this.notes,
@@ -72,6 +78,8 @@ class EMWBooking {
     // Client Details
     'partyId': partyId,
     'vehicleId': vehicleId,
+    'partyName': partyName,
+    'vehicleName': vehicleName,
     'startDate': startDate.toIso8601String(),
     'endDate': endDate.toIso8601String(),
     'notes': notes,
@@ -109,6 +117,8 @@ class EMWBooking {
     id: json['\$id'],
     partyId: json['partyId'],
     vehicleId: json['vehicleId'],
+    partyName: json['partyName'],
+    vehicleName: json['vehicleName'],
     startDate: DateTime.parse(json['startDate']),
     endDate: DateTime.parse(json['endDate']),
     notes: json['notes'],
@@ -161,7 +171,6 @@ class EMWBooking {
 class EMWBookingController extends GetxController {
   final Databases databases = Get.find<Databases>();
   final AuthService authService = Get.find<AuthService>();
-
   var bookings = <EMWBooking>[].obs;
 
   @override
@@ -169,9 +178,11 @@ class EMWBookingController extends GetxController {
     super.onInit();
     fetchEWF();
   }
+
   void onRefresh() async {
     await fetchEWF();
   }
+
   @override
   void onClose() {
     bookings.clear();
@@ -183,6 +194,8 @@ class EMWBookingController extends GetxController {
       booking = EMWBooking(
         partyId: booking.partyId,
         vehicleId: booking.vehicleId,
+        partyName: booking.partyName,
+        vehicleName: booking.vehicleName,
         startDate: booking.startDate,
         endDate: booking.endDate,
         rentType: booking.rentType,
@@ -206,7 +219,7 @@ class EMWBookingController extends GetxController {
         workLocation: booking.workLocation,
       );
 
-      // debugPrint('Creating booking: ${booking.toJson()}');
+      print('Creating booking: ${booking.toJson()}');
       // Create a new document in the Appwrite database
       final response = await databases.createDocument(
         databaseId: CId.databaseId,
@@ -221,7 +234,6 @@ class EMWBookingController extends GetxController {
       // debugPrint('Booking created: ${response.data}');
 
       print(response.data); // Log the response for debugging
-
       // true go back
       if (isSave) {
         Get.back();
@@ -322,6 +334,8 @@ class EMWBookingController extends GetxController {
             print('Booking ID: ${booking.id}'); // Debug log
             return booking;
           }).toList();
+      print('Fetched bookings: ${bookings.length}');
+      print('Fetched bookings: ${bookings.map((b) => b.toJson()).toList()}');
     } catch (e) {
       print('Error fetching EWF bookings: $e');
     }

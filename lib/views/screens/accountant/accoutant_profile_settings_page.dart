@@ -12,7 +12,7 @@ class AccountantProfileSettingsPage extends StatefulWidget {
 }
 
 class Accountant_ProfileSettingsPageState extends State<AccountantProfileSettingsPage> {
-  final _formKey = GlobalKey<FormState>();
+  // final _formKey = GlobalKey<FormState>();
   final ImagePicker _picker = ImagePicker();
 
   File? _profileImage;
@@ -50,7 +50,7 @@ class Accountant_ProfileSettingsPageState extends State<AccountantProfileSetting
       body: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 20.0),
         child: Form(
-          key: _formKey,
+          // key: _formKey,
           child: SingleChildScrollView(
             child: Column(
               spacing: 20,
@@ -147,10 +147,7 @@ class Accountant_ProfileSettingsPageState extends State<AccountantProfileSetting
                   text: "Save",
                   isLoading: isLoading,
                   onTap: () {
-                    if (_formKey.currentState!.validate()) {
-                      _formKey.currentState!.save();
-                      // Save the form data
-                    }
+                    
                   },
                 ),
               ],
