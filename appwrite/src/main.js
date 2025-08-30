@@ -106,8 +106,8 @@ export default async ({ req, res, log, error }) => {
     log('Client initialized with environment variables...');
 
     const result = await databases.listDocuments(
-      '67e640bd00005fc192ff',
-      '67fd925a0037a0a4016c',
+      '68b27fa37ab141eb9d3f',
+      // '67fd925a0037a0a4016c',
       [],
       3
     );
