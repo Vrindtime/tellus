@@ -6,7 +6,7 @@ export default async ({ req, res, log, error }) => {
     const client = new Client()
       .setEndpoint("https://cloud.appwrite.io/v1")
       .setProject("67ddfedd00142dbfb48e")
-      .setKey("68b25b24d9992c397d3b");
+      .setKey("68b257e10026f7c97132");
 
     const databases = new Databases(client);
 
