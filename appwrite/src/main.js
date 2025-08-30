@@ -88,4 +88,12 @@
 //   return response.json();
 // }
 
-  console.log("Hello World!");
+export default async ({ req, res, log, error }) => {
+  log('Function started successfully!');
+  
+  return res.json({ 
+    success: true, 
+    message: 'Hello from Appwrite function!',
+    timestamp: new Date().toISOString()
+  });
+};
