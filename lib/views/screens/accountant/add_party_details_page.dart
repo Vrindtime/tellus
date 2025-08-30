@@ -220,6 +220,7 @@ class _AddPartyDetailsPageState extends State<AddPartyDetailsPage> {
                       _generalController.refreshData();
                       Navigator.pop(context);
                     } catch (e) {
+                      // Do not pop or reset form, just show error
                       Get.snackbar('Error', 'Failed to save party: $e');
                     }
                   },
