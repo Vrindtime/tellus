@@ -89,6 +89,8 @@
 // }
 
 import { Client, Databases } from 'node-appwrite';
+import dotenv from 'dotenv';
+dotenv.config();
 
 export default async ({ req, res, log, error }) => {
   log('Testing database permissions...');
