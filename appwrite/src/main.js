@@ -99,15 +99,16 @@ export default async ({ req, res, log, error }) => {
     const client = new Client()
       .setEndpoint(process.env.APPWRITE_FUNCTION_ENDPOINT)
       .setProject(process.env.APPWRITE_FUNCTION_PROJECT_ID)
-      .setKey(process.env.APPWRITE_API_KEY); // Use environment variable
+      .setKey(req.headers['x-appwrite-key']); // Dynamic key 
+      // .setKey(process.env.APPWRITE_API_KEY); // Use environment variable
 
     const databases = new Databases(client);
     
     log('Client initialized with environment variables...');
 
     const result = await databases.listDocuments(
-      '68b27fa37ab141eb9d3f',
-      // '67fd925a0037a0a4016c',
+      '67e640bd00005fc192ff',
+      '67fd925a0037a0a4016c',
       [],
       3
     );
@@ -117,7 +118,7 @@ export default async ({ req, res, log, error }) => {
     return res.json({ 
       success: true, 
       documentsFound: result.documents.length,
-      message: 'Database permissions working!'
+      message: 'Database permissions working with dynamic key!!'
     });
     
   } catch (err) {
