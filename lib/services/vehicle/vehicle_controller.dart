@@ -113,9 +113,9 @@ class VehicleController extends GetxController {
         },
       );
       fetchVehicles();
-      Get.snackbar('Success', 'Vehicle added successfully', snackPosition: SnackPosition.BOTTOM);
+      Get.snackbar('Success', 'Vehicle added successfully', snackPosition: SnackPosition.TOP);
     } catch (e) {
-      Get.snackbar('Error', 'Failed to add vehicle: ${e.toString()}', snackPosition: SnackPosition.BOTTOM);
+      Get.snackbar('Error', 'Failed to add vehicle: ${e.toString()}', snackPosition: SnackPosition.TOP);
       debugPrint('Error adding vehicle: $e');
     }
   }

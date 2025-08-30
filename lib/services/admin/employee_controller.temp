@@ -1,0 +1,116 @@
+// import 'package:get/get.dart';
+// import 'package:appwrite/appwrite.dart';
+// import 'package:tellus/core/id.dart';
+// import 'package:tellus/services/auth/auth_service.dart';
+// import 'package:tellus/models/employee_model.dart';
+
+// class EmployeeController extends GetxController {
+//   final Databases databases = Get.find<Databases>();
+//   final AuthService authService = Get.find<AuthService>();
+
+//   var employees = <EmployeeModel>[].obs;
+//   var isLoading = false.obs;
+//   var error = ''.obs;
+
+//   Future<void> fetchEmployees() async {
+//     final orgId = authService.orgId.value;
+//     if (orgId.isEmpty) {
+//       error.value = 'Organization ID is not set.';
+//       return;
+//     }
+//     try {
+//       isLoading.value = true;
+//       final response = await databases.listDocuments(
+//         databaseId: CId.databaseId,
+//         collectionId: CId.employeeCollectionId,
+//         queries: [Query.equal('organizationId', orgId)],
+//       );
+//       employees.assignAll(
+//         response.documents.map((doc) => EmployeeModel.fromJson(doc.data)).toList(),
+//       );
+//       error.value = '';
+//     } catch (e) {
+//       error.value = 'Failed to fetch employees: $e';
+//     } finally {
+//       isLoading.value = false;
+//     }
+//   }
+
+//   Future<void> createEmployee(EmployeeModel employee) async {
+//     try {
+//       isLoading.value = true;
+//       final response = await databases.createDocument(
+//         databaseId: CId.databaseId,
+//         collectionId: CId.employeeCollectionId,
+//         documentId: 'unique()',
+//         data: employee.toJson(),
+//       );
+//       employees.add(EmployeeModel.fromJson(response.data));
+//       error.value = '';
+//     } catch (e) {
+//       error.value = 'Failed to create employee: $e';
+//     } finally {
+//       isLoading.value = false;
+//     }
+//   }
+
+//   Future<void> updateEmployee(EmployeeModel employee) async {
+//     if (employee.id == null) return;
+//     try {
+//       isLoading.value = true;
+//       final response = await databases.updateDocument(
+//         databaseId: CId.databaseId,
+//         collectionId: CId.employeeCollectionId,
+//         documentId: employee.id!,
+//         data: employee.toJson(),
+//       );
+//       final index = employees.indexWhere((e) => e.id == employee.id);
+//       if (index != -1) {
+//         employees[index] = EmployeeModel.fromJson(response.data);
+//       }
+//       error.value = '';
+//     } catch (e) {
+//       error.value = 'Failed to update employee: $e';
+//     } finally {
+//       isLoading.value = false;
+//     }
+//   }
+
+//   Future<void> deleteEmployee(String id) async {
+//     try {
+//       isLoading.value = true;
+//       await databases.deleteDocument(
+//         databaseId: CId.databaseId,
+//         collectionId: CId.employeeCollectionId,
+//         documentId: id,
+//       );
+//       employees.removeWhere((e) => e.id == id);
+//       error.value = '';
+//     } catch (e) {
+//       error.value = 'Failed to delete employee: $e';
+//     } finally {
+//       isLoading.value = false;
+//     }
+//   }
+
+//   Future<void> createEmployeeForUser({
+//     required String userId,
+//     required String organizationId,
+//     required String role,
+//     String paymentType = 'Fixed',
+//     double? fixedSalary,
+//     double? hourlyRate,
+//   }) async {
+//     if (role == 'accountant' || role == 'driver') {
+//       final employee = EmployeeModel(
+//         userId: userId,
+//         organizationId: organizationId,
+//         paymentType: paymentType,
+//         fixedSalary: fixedSalary,
+//         hourlyRate: hourlyRate,
+//         status: 'Active',
+//       );
+//       await createEmployee(employee);
+//     }
+//   }
+// }

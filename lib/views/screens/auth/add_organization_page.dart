@@ -3,6 +3,7 @@ import 'package:appwrite/models.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:tellus/services/admin/organization_controller.dart';
+import 'package:tellus/views/widgets/dropdown_widget.dart';
 import 'package:tellus/views/widgets/submit_button.dart';
 import 'package:tellus/views/widgets/text_input_widget.dart';
 
@@ -14,18 +15,15 @@ class AddOrganizationPage extends StatefulWidget {
 }
 
 class _AddOrganizationPageState extends State<AddOrganizationPage> {
-  final OrganizationController orgController = Get.find<OrganizationController>();
+  final OrganizationController orgController =
+      Get.find<OrganizationController>();
   final TextEditingController searchController = TextEditingController();
-
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text(
-          "Organizations",
-          style: TextStyle(fontSize: 20),
-        ),
+        title: const Text("Organizations", style: TextStyle(fontSize: 20)),
         centerTitle: true,
         forceMaterialTransparency: true,
       ),
@@ -42,14 +40,14 @@ class _AddOrganizationPageState extends State<AddOrganizationPage> {
             }
             final allOrgs = snapshot.data!;
             // Optionally filter based on the search query.
-            final filteredOrgs = searchController.text.isEmpty
-                ? allOrgs
-                : allOrgs.where((org) {
-                    return org['orgName']
-                        .toString()
-                        .toLowerCase()
-                        .contains(searchController.text.toLowerCase());
-                  }).toList();
+            final filteredOrgs =
+                searchController.text.isEmpty
+                    ? allOrgs
+                    : allOrgs.where((org) {
+                      return org['orgName'].toString().toLowerCase().contains(
+                        searchController.text.toLowerCase(),
+                      );
+                    }).toList();
 
             return OrganizationListTileWidget(items: filteredOrgs);
           },
@@ -81,9 +79,13 @@ class _AddOrganizationModalState extends State<AddOrganizationModal> {
   final TextEditingController userNameController = TextEditingController();
   final TextEditingController orgNameController = TextEditingController();
   final TextEditingController phoneNumbersController = TextEditingController();
-  final OrganizationController orgController = Get.find<OrganizationController>();
-  
+  final OrganizationController orgController =
+      Get.find<OrganizationController>();
+
   bool isLoading = false;
+  String selectedCountryCode = '+91';
+
+  List<String> countryCodeList = ['+91', '+1', '+971', '+968', '+44', '+49'];
 
   @override
   Widget build(BuildContext context) {
@@ -110,11 +112,34 @@ class _AddOrganizationModalState extends State<AddOrganizationModal> {
             label: 'Enter Organization Name',
           ),
           const SizedBox(height: 16),
-          CustomTextInput(
-            controller: phoneNumbersController,
-            icon: Icons.phone,
-            label: 'Enter Phone Number (+911234567890)',
-            keyboardType: TextInputType.phone,
+          Row(
+            children: [
+              SizedBox(
+                height: 50,
+                width: 100,
+                child: CustomDropdown(
+                  label: 'Country Code',
+                  selectedValue: selectedCountryCode,
+                  items: countryCodeList,
+                  onChanged: (value) {
+                    setState(() {
+                      selectedCountryCode = value!;
+                    });
+                  },
+                ),
+              ),
+              Spacer(),
+              SizedBox(
+                height: 50,
+                width: MediaQuery.of(context).size.width * 0.64,
+                child: CustomTextInput(
+                  controller: phoneNumbersController,
+                  icon: Icons.phone,
+                  label: 'Enter Phone Number (1234567890)',
+                  keyboardType: TextInputType.phone,
+                ),
+              ),
+            ],
           ),
           const SizedBox(height: 20),
           SubmitButton(
@@ -123,8 +148,10 @@ class _AddOrganizationModalState extends State<AddOrganizationModal> {
             onTap: () async {
               String orgName = orgNameController.text.trim();
               String userName = userNameController.text.trim();
-              String phoneNumbersStr = phoneNumbersController.text.trim();
-              if (orgName.isEmpty || phoneNumbersStr.isEmpty || userName.isEmpty) {
+              String phoneNumbersStr = selectedCountryCode+phoneNumbersController.text.trim();
+              if (orgName.isEmpty ||
+                  phoneNumbersStr.isEmpty ||
+                  userName.isEmpty) {
                 Get.snackbar('Error', 'Please fill in all fields.');
                 return;
               }
@@ -133,7 +160,11 @@ class _AddOrganizationModalState extends State<AddOrganizationModal> {
               });
               Get.back();
               // Call the controller's addOrganization method.
-              Document? newOrg = await orgController.addOrganization(orgName, phoneNumbersStr, userName);
+              Document? newOrg = await orgController.addOrganization(
+                orgName,
+                phoneNumbersStr,
+                userName,
+              );
               if (newOrg != null) {
                 Get.snackbar('Success', 'Organization added.');
               } else {
@@ -143,7 +174,6 @@ class _AddOrganizationModalState extends State<AddOrganizationModal> {
                 isLoading = false;
               });
               // Close the modal.
-              
             },
           ),
           const SizedBox(height: 20),
@@ -157,7 +187,7 @@ class OrganizationListTileWidget extends StatelessWidget {
   final List<Map<String, dynamic>> items;
 
   const OrganizationListTileWidget({required this.items, Key? key})
-      : super(key: key);
+    : super(key: key);
 
   /// Builds a tile for each organization using its name.
   Widget _buildTile(String orgName, BuildContext context) {
@@ -171,10 +201,7 @@ class OrganizationListTileWidget extends StatelessWidget {
       ),
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-        child: Text(
-          orgName,
-          style: Theme.of(context).textTheme.titleMedium,
-        ),
+        child: Text(orgName, style: Theme.of(context).textTheme.titleMedium),
       ),
     );
   }
@@ -184,9 +211,13 @@ class OrganizationListTileWidget extends StatelessWidget {
     return AnimationList(
       duration: 1200,
       animationDirection: AnimationDirection.horizontal,
-      children: items.map((item) {
-        return _buildTile(item['orgName'] ?? 'Unnamed Organization', context);
-      }).toList(),
+      children:
+          items.map((item) {
+            return _buildTile(
+              item['orgName'] ?? 'Unnamed Organization',
+              context,
+            );
+          }).toList(),
     );
   }
 }

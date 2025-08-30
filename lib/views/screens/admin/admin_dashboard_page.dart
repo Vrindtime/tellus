@@ -4,7 +4,6 @@ import 'package:tellus/views/screens/accountant/manage_expense.dart';
 import 'package:tellus/views/screens/accountant/party_details_page.dart';
 import 'package:tellus/views/screens/accountant/report_page.dart';
 import 'package:tellus/views/screens/admin/create_user_page.dart';
-import 'package:tellus/views/screens/common/common_page_name.dart';
 import 'package:tellus/views/screens/common/quick_link_widget.dart';
 import 'package:get/get.dart';
 import 'package:tellus/services/admin/admin_controller.dart';
@@ -49,7 +48,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                       context,
                       PageTransition(
                         type: PageTransitionType.rightToLeftJoined,
-                        child: const CreateUserPage(),
+                        child: CreateUserEmployeePage(),
                         childCurrent: const AdminDashboardPage(),
                       ),
                     );
@@ -165,6 +164,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                       final role = users[index]['role'];
                       final phone = users[index]['phoneNumber'];
                       final avatarIcon = users[index]['pfp'];
+                      final location = users[index]['location'];
                       // debugPrint('--- User Name from Admin DashBaord: $username');
                       // debugPrint('--- User ID from Admin DashBaord: $userId');
                       // debugPrint('--- User phone from Admin DashBaord: $phone');
@@ -180,17 +180,18 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                               context,
                               PageTransition(
                                 type: PageTransitionType.rightToLeftWithFade,
-                                child: CreateUserPage(
+                                child: CreateUserEmployeePage(
                                   isEdit: true,
                                   userId:userId,
-                                  name: username,
-                                  phone: phone,
-                                  role: role,
+                                  // name: username,
+                                  // phone: phone,
+                                  // role: role,
+                                  // location: location,
                                 ),
                               ),
                             );
                           } else {
-                            Get.snackbar('Error', 'Invalid user data', snackPosition: SnackPosition.BOTTOM);
+                            Get.snackbar('Error', 'Invalid user data', snackPosition: SnackPosition.TOP);
                           }
                         },
                       );

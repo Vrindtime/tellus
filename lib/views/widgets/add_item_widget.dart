@@ -37,23 +37,9 @@ class _AddItemWidgetState extends State<AddItemWidget> {
           widget.initialData!['sellPrice']?.toString() ?? '';
       unit = widget.initialData!['unit'] ?? 'Cubic Meter';
       taxOption = widget.initialData!['taxOption'] ?? 'With Tax';
-      _fromLocationController.text = widget.initialData!['fromLocation'] ?? 'From Location';
+      _fromLocationController.text =
+          widget.initialData!['fromLocation'] ?? 'From Location';
     }
-  }
-
-  Future<List<Map<String, String>>> _getItemSuggestions(String query) async {
-    final materials = [
-      {'name': 'Sand', 'category': 'Raw Material'},
-      {'name': 'Gravel', 'category': 'Raw Material'},
-      {'name': 'Clay', 'category': 'Soil'},
-      {'name': 'Topsoil', 'category': 'Soil'},
-    ];
-    return materials
-        .where(
-          (material) =>
-              material['name']!.toLowerCase().contains(query.toLowerCase()),
-        )
-        .toList();
   }
 
   @override
@@ -67,16 +53,17 @@ class _AddItemWidgetState extends State<AddItemWidget> {
         child: SingleChildScrollView(
           child: Column(
             children: [
-              SizedBox(
-                width: 500,
-                child: SearchTextField(
-                  label: 'Item Name',
-                  controller: _itemController,
-                  suggestionsCallback: _getItemSuggestions,
-                  onSuggestionSelected: (suggestion) {
-                    _itemController.text = suggestion['name']!;
-                  },
-                ),
+              CustomTextInput(
+                label: 'Item Name',
+                controller: _itemController,
+                icon: Icons.shopping_cart,
+                keyboardType: TextInputType.text,
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Item Name is required';
+                  }
+                  return null;
+                },
               ),
               SizedBox(height: 10 * scaleFactor),
               Row(
@@ -185,8 +172,8 @@ class _AddItemWidgetState extends State<AddItemWidget> {
             final quantity = double.tryParse(_quantityController.text) ?? 0.0;
             final costPrice = double.tryParse(_costPriceController.text) ?? 0.0;
             final sellPrice = double.tryParse(_sellPriceController.text) ?? 0.0;
-            String location = _fromLocationController.text.trim(); 
-            print('ADD ITEM LOCAITON: $location'); 
+            String location = _fromLocationController.text.trim();
+            print('ADD ITEM LOCAITON: $location');
             if (_itemController.text.isNotEmpty &&
                 quantity > 0 &&
                 costPrice >= 0 &&

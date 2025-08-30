@@ -5,6 +5,7 @@ import 'package:tellus/helper/helper.dart';
 import 'package:tellus/services/accountant/general_controller.dart';
 import 'package:tellus/services/accountant/party_controller.dart';
 import 'package:tellus/views/widgets/custom_size_button.dart';
+import 'package:tellus/views/widgets/dropdown_widget.dart';
 import 'package:tellus/views/widgets/text_input_widget.dart';
 import 'package:image_picker/image_picker.dart';
 
@@ -19,33 +20,28 @@ class AddPartyDetailsPage extends StatefulWidget {
 
 class _AddPartyDetailsPageState extends State<AddPartyDetailsPage> {
   final ImagePicker _picker = ImagePicker();
-
-  final TextEditingController _nameController = TextEditingController();
-  final TextEditingController _phoneController = TextEditingController();
-  final TextEditingController _gstinController = TextEditingController();
-  final TextEditingController _companyNameController = TextEditingController();
-  final TextEditingController _locationController = TextEditingController();
-
-  final GeneralController _generalController = Get.put(GeneralController());
-
+  final GeneralController _generalController = Get.find<GeneralController>();
   String newPfpUrl = '';
-  bool isLoading = false;
-
-  @override
-  void initState() {
-    super.initState();
-    if (widget.party != null) {
-      _nameController.text = widget.party!.name;
-      _phoneController.text = widget.party!.phoneNumber;
-      _gstinController.text = widget.party!.gstin ?? '';
-      _companyNameController.text = widget.party!.companyName ?? '';
-      _locationController.text = widget.party!.location ?? '';
-      newPfpUrl = widget.party!.pfp ?? '';
-    }
-  }
+  bool _isInitialized = false;
 
   @override
   Widget build(BuildContext context) {
+    final PartyController partyController = Get.find<PartyController>();
+
+    // Initialize fields only once
+    if (!_isInitialized) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (widget.party != null) {
+          partyController.setPartyForEdit(widget.party!);
+          newPfpUrl = widget.party!.pfp ?? '';
+        } else {
+          partyController.resetState();
+          newPfpUrl = '';
+        }
+        _isInitialized = true;
+      });
+    }
+
     return Scaffold(
       appBar: AppBar(
         title: Text(
@@ -53,36 +49,25 @@ class _AddPartyDetailsPageState extends State<AddPartyDetailsPage> {
         ),
         centerTitle: true,
         forceMaterialTransparency: true,
-        actions:
-            (widget.party == null)
-                ? null
-                : [
-                  IconButton(
-                    icon: Icon(
-                      Icons.delete,
-                      color: Theme.of(context).colorScheme.error,
-                    ),
-                    onPressed: () async {
-                      setState(() {
-                        isLoading = true;
-                      });
-                      try {
-                        final partyController = Get.find<PartyController>();
-                        await partyController.deleteParty(
-                          widget.party!.documentId,
-                        );
-                        _generalController.refreshData();
-                        Navigator.pop(context);
-                      } catch (e) {
-                        Get.snackbar('Error', 'Failed to delete party: $e');
-                      } finally {
-                        setState(() {
-                          isLoading = false;
-                        });
-                      }
-                    },
+        actions: widget.party == null
+            ? null
+            : [
+                IconButton(
+                  icon: Icon(
+                    Icons.delete,
+                    color: Theme.of(context).colorScheme.error,
                   ),
-                ],
+                  onPressed: () async {
+                    try {
+                      await partyController.deleteParty(widget.party!.documentId);
+                      _generalController.refreshData();
+                      Navigator.pop(context);
+                    } catch (e) {
+                      Get.snackbar('Error', 'Failed to delete party: $e');
+                    }
+                  },
+                ),
+              ],
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -95,10 +80,7 @@ class _AddPartyDetailsPageState extends State<AddPartyDetailsPage> {
                     source: ImageSource.gallery,
                   );
                   if (pickedFile != null) {
-                    setState(() {
-                      isLoading = true;
-                    });
-                    // Use the pickedFile.path directly,
+                    partyController.isLoading.value = true;
                     final url = await saveImageAndGetUrl(
                       file: XFile(pickedFile.path),
                       bucketId: CId.partyPfpBucketId,
@@ -106,9 +88,9 @@ class _AddPartyDetailsPageState extends State<AddPartyDetailsPage> {
                     if (url != null) {
                       setState(() {
                         newPfpUrl = url;
-                        isLoading = false;
                       });
                     }
+                    partyController.isLoading.value = false;
                   }
                 },
                 child: Container(
@@ -119,27 +101,25 @@ class _AddPartyDetailsPageState extends State<AddPartyDetailsPage> {
                     border: Border.all(color: Colors.grey, width: 2),
                     color: Colors.grey[200],
                   ),
-                  child:
-                      newPfpUrl.isEmpty
-                          ? Icon(Icons.camera_alt, size: 48)
-                          : ClipRRect(
-                            borderRadius: BorderRadius.circular(24),
-                            child: Image.network(
-                              newPfpUrl,
-                              width: 160,
-                              height: 160,
-                              fit: BoxFit.cover,
-                              errorBuilder:
-                                  (context, error, stackTrace) =>
-                                      Icon(Icons.broken_image, size: 48),
-                            ),
+                  child: newPfpUrl.isEmpty
+                      ? Icon(Icons.camera_alt, size: 48)
+                      : ClipRRect(
+                          borderRadius: BorderRadius.circular(24),
+                          child: Image.network(
+                            newPfpUrl,
+                            width: 160,
+                            height: 160,
+                            fit: BoxFit.cover,
+                            errorBuilder: (context, error, stackTrace) =>
+                                Icon(Icons.broken_image, size: 48),
                           ),
+                        ),
                 ),
               ),
               const SizedBox(height: 16),
               CustomTextInput(
                 label: 'Full Name',
-                controller: _nameController,
+                controller: partyController.nameController,
                 icon: Icons.person,
                 validator: (value) {
                   if (value == null || value.isEmpty) {
@@ -149,37 +129,57 @@ class _AddPartyDetailsPageState extends State<AddPartyDetailsPage> {
                 },
               ),
               const SizedBox(height: 16),
-              CustomTextInput(
-                label: 'Phone Number',
-                controller: _phoneController,
-                icon: Icons.phone,
-                keyboardType: TextInputType.phone,
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Phone number is required';
-                  }
-                  if (value.length != 10 || int.tryParse(value) == null) {
-                    return 'Enter a valid 10-digit phone number';
-                  }
-                  return null;
-                },
+              Row(
+                children: [
+                  SizedBox(
+                    height: 50,
+                    width: 100,
+                    child: Obx(
+                      () => CustomDropdown(
+                        label: 'Country Code',
+                        selectedValue: partyController.selectedCountryCode.value,
+                        items: partyController.countryCodeList,
+                        onChanged: (value) {
+                          partyController.selectedCountryCode.value = value!;
+                        },
+                      ),
+                    ),
+                  ),
+                  const Spacer(),
+                  SizedBox(
+                    height: 50,
+                    width: MediaQuery.of(context).size.width * 0.64,
+                    child: CustomTextInput(
+                      controller: partyController.phoneController,
+                      icon: Icons.phone,
+                      label: 'Enter Phone Number (1234567890)',
+                      keyboardType: TextInputType.phone,
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Phone number is required';
+                        }
+                        return null;
+                      },
+                    ),
+                  ),
+                ],
               ),
               const SizedBox(height: 16),
               CustomTextInput(
                 label: 'GSTIN (Optional)',
-                controller: _gstinController,
+                controller: partyController.gstinController,
                 icon: Icons.business,
               ),
               const SizedBox(height: 16),
               CustomTextInput(
                 label: 'Company Name (Optional)',
-                controller: _companyNameController,
+                controller: partyController.companyNameController,
                 icon: Icons.business,
               ),
               const SizedBox(height: 16),
               CustomTextInput(
                 label: 'Location',
-                controller: _locationController,
+                controller: partyController.locationController,
                 icon: Icons.location_on,
                 validator: (value) {
                   if (value == null || value.isEmpty) {
@@ -189,64 +189,41 @@ class _AddPartyDetailsPageState extends State<AddPartyDetailsPage> {
                 },
               ),
               const SizedBox(height: 16),
-              CustomSubmitButton(
-                text: 'Save',
-                isLoading: isLoading,
-                onTap: () async {
-                  if (_nameController.text.isEmpty ||
-                      _phoneController.text.isEmpty ||
-                      _locationController.text.isEmpty) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Please fill in all required fields'),
-                      ),
+              Obx(
+                () => CustomSubmitButton(
+                  text: 'Save',
+                  isLoading: partyController.isLoading.value,
+                  onTap: () async {
+                    final party = Party(
+                      documentId: widget.party?.documentId ?? 'unique()',
+                      name: partyController.nameController.text,
+                      phoneNumber: '${partyController.selectedCountryCode.value}${partyController.phoneController.text}',
+                      gstin: partyController.gstinController.text.isEmpty
+                          ? null
+                          : partyController.gstinController.text,
+                      companyName: partyController.companyNameController.text.isEmpty
+                          ? null
+                          : partyController.companyNameController.text,
+                      location: partyController.locationController.text,
+                      pfp: newPfpUrl.isEmpty ? null : newPfpUrl,
                     );
-                    return;
-                  }
 
-                  final party = Party(
-                    documentId: widget.party?.documentId ?? 'unique()',
-                    name: _nameController.text,
-                    phoneNumber: _phoneController.text,
-                    gstin:
-                        _gstinController.text.isEmpty
-                            ? null
-                            : _gstinController.text,
-                    companyName:
-                        _companyNameController.text.isEmpty
-                            ? null
-                            : _companyNameController.text,
-                    location: _locationController.text,
-                    pfp:
-                        newPfpUrl.isEmpty
-                            ? null
-                            : newPfpUrl, // Save only fileId
-                  );
-
-                  setState(() {
-                    isLoading = true;
-                  });
-
-                  try {
-                    final partyController = Get.find<PartyController>();
-                    if (widget.party == null) {
-                      await partyController.addParty(party);
-                    } else {
-                      await partyController.updateParty(
-                        widget.party!.documentId,
-                        party,
-                      );
+                    try {
+                      if (widget.party == null) {
+                        await partyController.addParty(party);
+                      } else {
+                        await partyController.updateParty(
+                          widget.party!.documentId,
+                          party,
+                        );
+                      }
+                      _generalController.refreshData();
+                      Navigator.pop(context);
+                    } catch (e) {
+                      Get.snackbar('Error', 'Failed to save party: $e');
                     }
-                    _generalController.refreshData();
-                    Navigator.pop(context);
-                  } catch (e) {
-                    Get.snackbar('Error', 'Failed to save party: $e');
-                  } finally {
-                    setState(() {
-                      isLoading = false;
-                    });
-                  }
-                },
+                  },
+                ),
               ),
             ],
           ),

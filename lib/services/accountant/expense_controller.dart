@@ -1,5 +1,4 @@
 import 'package:get/get.dart';
-import 'package:image_picker/image_picker.dart';
 import 'package:appwrite/appwrite.dart';
 import 'package:tellus/core/id.dart';
 import 'package:tellus/services/auth/auth_service.dart';

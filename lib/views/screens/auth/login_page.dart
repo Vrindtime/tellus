@@ -7,14 +7,28 @@ import 'package:tellus/views/widgets/dropdown_widget.dart';
 import 'package:tellus/views/widgets/phone_input_widget.dart';
 import 'package:tellus/views/widgets/submit_button.dart';
 
-class LoginPage extends StatelessWidget {
+class LoginPage extends StatefulWidget {
   LoginPage({super.key});
 
+  @override
+  State<LoginPage> createState() => _LoginPageState();
+}
+
+class _LoginPageState extends State<LoginPage> {
   final LoginController loginController = Get.put(LoginController());
+
   final TextEditingController phoneController = TextEditingController();
 
   String selectedCountryCode = '+91';
-  List<String> countryCodeList = ['+91', '+1', '+971', '+968', '+44', '+1', '+49'];
+
+  List<String> countryCodeList = [
+    '+91',
+    '+1',
+    '+971',
+    '+968',
+    '+44',
+    '+49',
+  ];
 
   @override
   Widget build(BuildContext context) {
@@ -54,7 +68,9 @@ class LoginPage extends StatelessWidget {
                 selectedValue: selectedCountryCode,
                 items: countryCodeList,
                 onChanged: (value) {
-                  selectedCountryCode = value!;
+                  setState(() {
+                    selectedCountryCode = value!;
+                  });
                 },
               ),
               PhoneValidInput(inputController: phoneController),

@@ -243,7 +243,7 @@ class EMWBookingController extends GetxController {
       Get.snackbar(
         'Success',
         'Booking created successfully',
-        snackPosition: SnackPosition.BOTTOM,
+        snackPosition: SnackPosition.TOP,
       );
     } catch (e) {
       // Log the error and show an error snackbar
@@ -251,7 +251,7 @@ class EMWBookingController extends GetxController {
       Get.snackbar(
         'Error',
         'Failed to create booking',
-        snackPosition: SnackPosition.BOTTOM,
+        snackPosition: SnackPosition.TOP,
       );
     }
   }
@@ -273,14 +273,14 @@ class EMWBookingController extends GetxController {
       Get.snackbar(
         'Success',
         'Booking updated successfully',
-        snackPosition: SnackPosition.BOTTOM,
+        snackPosition: SnackPosition.TOP,
       );
     } catch (e) {
       print('Error updating booking: $e');
       Get.snackbar(
         'Error',
         'Failed to update booking',
-        snackPosition: SnackPosition.BOTTOM,
+        snackPosition: SnackPosition.TOP,
       );
     }
   }
@@ -299,14 +299,14 @@ class EMWBookingController extends GetxController {
       Get.snackbar(
         'Success',
         'Booking deleted successfully',
-        snackPosition: SnackPosition.BOTTOM,
+        snackPosition: SnackPosition.TOP,
       );
     } catch (e) {
       print('Error deleting booking: $e');
       Get.snackbar(
         'Error',
         'Failed to delete booking',
-        snackPosition: SnackPosition.BOTTOM,
+        snackPosition: SnackPosition.TOP,
       );
     }
   }

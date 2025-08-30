@@ -1,0 +1,182 @@
+// import 'package:flutter/material.dart';
+// import 'package:get/get.dart';
+// import 'package:tellus/services/admin/employee_controller.dart';
+// import 'package:tellus/models/employee_model.dart';
+
+// class EmployeeManagementPage extends StatefulWidget {
+//   const EmployeeManagementPage({super.key});
+//   @override
+//   State<EmployeeManagementPage> createState() => _EmployeeManagementPageState();
+// }
+
+// class _EmployeeManagementPageState extends State<EmployeeManagementPage> {
+//   final EmployeeController controller = Get.put(EmployeeController());
+//   final _formKey = GlobalKey<FormState>();
+//   final TextEditingController userIdController = TextEditingController();
+//   final TextEditingController fixedSalaryController = TextEditingController();
+//   final TextEditingController hourlyRateController = TextEditingController();
+//   final RxString paymentType = 'Fixed'.obs;
+//   final RxString status = 'Active'.obs;
+//   EmployeeModel? editingEmployee;
+
+//   void clearForm() {
+//     userIdController.clear();
+//     fixedSalaryController.clear();
+//     hourlyRateController.clear();
+//     paymentType.value = 'Fixed';
+//     status.value = 'Active';
+//     setState(() {
+//       editingEmployee = null;
+//     });
+//   }
+
+//   @override
+//   void dispose() {
+//     userIdController.dispose();
+//     fixedSalaryController.dispose();
+//     hourlyRateController.dispose();
+//     super.dispose();
+//   }
+
+//   @override
+//   Widget build(BuildContext context) {
+//     return Scaffold(
+//       appBar: AppBar(
+//         title: Text('Employee Management', style: Theme.of(context).textTheme.titleLarge),
+//         backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+//         elevation: 0,
+//       ),
+//       body: SafeArea(
+//         child: Obx(() {
+//           if (controller.isLoading.value) {
+//             return const Center(child: CircularProgressIndicator());
+//           }
+//           return Padding(
+//             padding: const EdgeInsets.all(16.0),
+//             child: Column(
+//               children: [
+//                 Form(
+//                   key: _formKey,
+//                   child: Column(
+//                     children: [
+//                       TextFormField(
+//                         controller: userIdController,
+//                         decoration: const InputDecoration(labelText: 'User ID'),
+//                         validator: (v) => v == null || v.isEmpty ? 'Required' : null,
+//                       ),
+//                       Obx(() => DropdownButtonFormField<String>(
+//                         value: paymentType.value,
+//                         decoration: const InputDecoration(labelText: 'Payment Type'),
+//                         items: const [
+//                           DropdownMenuItem(value: 'Fixed', child: Text('Fixed')),
+//                           DropdownMenuItem(value: 'Per Hour', child: Text('Per Hour')),
+//                           DropdownMenuItem(value: 'Per Work', child: Text('Per Work')),
+//                         ],
+//                         onChanged: (val) => paymentType.value = val!,
+//                       )),
+//                       if (paymentType.value == 'Fixed')
+//                         TextFormField(
+//                           controller: fixedSalaryController,
+//                           decoration: const InputDecoration(labelText: 'Fixed Salary'),
+//                           keyboardType: TextInputType.number,
+//                         ),
+//                       if (paymentType.value == 'Per Hour')
+//                         TextFormField(
+//                           controller: hourlyRateController,
+//                           decoration: const InputDecoration(labelText: 'Hourly Rate'),
+//                           keyboardType: TextInputType.number,
+//                         ),
+//                       Obx(() => DropdownButtonFormField<String>(
+//                         value: status.value,
+//                         decoration: const InputDecoration(labelText: 'Status'),
+//                         items: const [
+//                           DropdownMenuItem(value: 'Active', child: Text('Active')),
+//                           DropdownMenuItem(value: 'Left', child: Text('Left')),
+//                         ],
+//                         onChanged: (val) => status.value = val!,
+//                       )),
+//                       const SizedBox(height: 10),
+//                       Row(
+//                         children: [
+//                           ElevatedButton(
+//                             onPressed: () {
+//                               if (_formKey.currentState!.validate()) {
+//                                 final employee = EmployeeModel(
+//                                   id: editingEmployee?.id,
+//                                   userId: userIdController.text,
+//                                   organizationId: controller.authService.orgId.value,
+//                                   paymentType: paymentType.value,
+//                                   fixedSalary: fixedSalaryController.text.isNotEmpty ? double.tryParse(fixedSalaryController.text) : null,
+//                                   hourlyRate: hourlyRateController.text.isNotEmpty ? double.tryParse(hourlyRateController.text) : null,
+//                                   status: status.value,
+//                                 );
+//                                 if (editingEmployee == null) {
+//                                   controller.createEmployee(employee);
+//                                 } else {
+//                                   controller.updateEmployee(employee);
+//                                 }
+//                                 clearForm();
+//                               }
+//                             },
+//                             child: Text(editingEmployee == null ? 'Add Employee' : 'Update Employee'),
+//                           ),
+//                           const SizedBox(width: 10),
+//                           if (editingEmployee != null)
+//                             OutlinedButton(
+//                               onPressed: clearForm,
+//                               child: const Text('Cancel'),
+//                             ),
+//                         ],
+//                       ),
+//                     ],
+//                   ),
+//                 ),
+//                 const SizedBox(height: 20),
+//                 Expanded(
+//                   child: Obx(() => ListView.separated(
+//                         itemCount: controller.employees.length,
+//                         separatorBuilder: (_, __) => const Divider(),
+//                         itemBuilder: (context, index) {
+//                           final emp = controller.employees[index];
+//                           return ListTile(
+//                             title: Text(emp.userId),
+//                             subtitle: Text(emp.paymentType),
+//                             trailing: Row(
+//                               mainAxisSize: MainAxisSize.min,
+//                               children: [
+//                                 IconButton(
+//                                   icon: const Icon(Icons.edit),
+//                                   onPressed: () {
+//                                     setState(() {
+//                                       userIdController.text = emp.userId;
+//                                       paymentType.value = emp.paymentType;
+//                                       fixedSalaryController.text = emp.fixedSalary?.toString() ?? '';
+//                                       hourlyRateController.text = emp.hourlyRate?.toString() ?? '';
+//                                       status.value = emp.status;
+//                                       editingEmployee = emp;
+//                                     });
+//                                   },
+//                                 ),
+//                                 IconButton(
+//                                   icon: const Icon(Icons.delete),
+//                                   onPressed: () => controller.deleteEmployee(emp.id!),
+//                                 ),
+//                               ],
+//                             ),
+//                           );
+//                         },
+//                       )),
+//                 ),
+//                 if (controller.error.isNotEmpty)
+//                   Padding(
+//                     padding: const EdgeInsets.all(8.0),
+//                     child: Text(controller.error.value, style: const TextStyle(color: Colors.red)),
+//                   ),
+//               ],
+//             ),
+//           );
+//         }),
+//       ),
+//     );
+//   }
+// }

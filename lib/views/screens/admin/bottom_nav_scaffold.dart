@@ -6,6 +6,7 @@ import 'package:page_transition/page_transition.dart';
 import 'package:tellus/views/screens/accountant/billing_page.dart';
 import 'package:tellus/views/screens/admin/admin_dashboard_page.dart';
 import 'package:tellus/views/screens/admin/admin_setting_page.dart';
+import 'package:tellus/views/screens/admin/payroll_page.dart';
 import 'package:tellus/views/screens/admin/vehicle_managment_page.dart';
 import 'package:tellus/views/screens/common/notification_page.dart';
 
@@ -30,13 +31,13 @@ class AdminBottomNavigationMenuPageState
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text("Admin", style: Theme.of(context).textTheme.titleLarge),
-            Text(
-              "This is a demo app and will be live\n as a subscription-based app on 21st May 2025",
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: Theme.of(context).colorScheme.secondary,
-                fontSize: 10
-              ),
-            ),
+            // Text(
+            //   "This is a demo app and will be live\n as a subscription-based app on 21st May 2025",
+            //   style: Theme.of(context).textTheme.bodySmall?.copyWith(
+            //     color: Theme.of(context).colorScheme.secondary,
+            //     fontSize: 10
+            //   ),
+            // ),
           ],
         ),
         automaticallyImplyLeading: false,
@@ -64,6 +65,7 @@ class AdminBottomNavigationMenuPageState
           [
             BillingPage(),
             VehicleManagementPage(),
+            PayrollPage(),
             AdminDashboardPage(),
             AdminSettingPage(),
           ][_currentPage],
@@ -98,16 +100,23 @@ class AdminBottomNavigationMenuPageState
                     : Colors.white.withOpacity(0.4),
           ),
           Icon(
-            Icons.person,
+            Icons.badge, // Changed to badge for payroll
             color:
                 _currentPage == 2
                     ? Theme.of(context).colorScheme.onSurface
                     : Colors.white.withOpacity(0.4),
           ),
           Icon(
-            Icons.settings,
+            Icons.person,
             color:
                 _currentPage == 3
+                    ? Theme.of(context).colorScheme.onSurface
+                    : Colors.white.withOpacity(0.4),
+          ),
+          Icon(
+            Icons.settings,
+            color:
+                _currentPage == 4
                     ? Theme.of(context).colorScheme.onSurface
                     : Colors.white.withOpacity(0.4),
           ),

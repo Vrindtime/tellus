@@ -53,7 +53,7 @@ class LoginController extends GetxController {
           debugPrint('Send OTP Failed: $e');
         }
       } else {
-        Get.snackbar('Error', 'Organization not found');
+        Get.snackbar('Error', 'Organization not found that matches this phone');
       }
     } catch (e) {
       Get.snackbar('Error', e.toString());

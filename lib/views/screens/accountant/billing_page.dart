@@ -12,17 +12,39 @@ import 'package:tellus/services/accountant/party_controller.dart';
 import 'package:tellus/services/accountant/payment_in_controller.dart';
 import 'package:tellus/services/admin/organization_controller.dart';
 import 'package:tellus/views/screens/accountant/payment_in_page.dart';
+import 'package:tellus/views/screens/accountant/previous_transactions_page.dart';
 import 'package:tellus/views/screens/admin/task/consumer_task_page.dart';
 import 'package:tellus/views/screens/admin/task/finished_task_page.dart';
 import 'package:tellus/views/screens/admin/task/new_task_page.dart';
 import 'package:tellus/views/widgets/extras/transcation_list_tile_widget.dart';
 import 'package:tellus/views/screens/common/quick_link_widget.dart';
 
-class BillingPage extends StatelessWidget {
-  BillingPage({super.key});
-  final OrganizationController organizationController = Get.put(OrganizationController());
+class BillingPage extends StatefulWidget {
+  const BillingPage({super.key});
+
+  @override
+  State<BillingPage> createState() => _BillingPageState();
+}
+
+class _BillingPageState extends State<BillingPage> {
+  final OrganizationController organizationController = Get.put(
+    OrganizationController(),
+  );
+
   final PartyController partyController = Get.put(PartyController());
+
   final GeneralController generalController = Get.put(GeneralController());
+
+  @override
+  void initState() {
+    super.initState();
+    // Initialize the combined list
+    _loadInitialData();
+  }
+
+  Future<void> _loadInitialData() async {
+    await generalController.fetchCombinedList();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -104,6 +126,23 @@ class BillingPage extends StatelessWidget {
                 "Previous Transactions",
                 style: Theme.of(context).textTheme.titleMedium,
               ),
+              InkWell(
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    PageTransition(
+                      type: PageTransitionType.rightToLeft,
+                      child: const PreviousTransactionsPage(),
+                    ),
+                  );
+                },
+                child: Text(
+                  "History",
+                  style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                    color: Theme.of(context).colorScheme.secondary,
+                  ),
+                ),
+              ),
             ],
           ),
           const SizedBox(height: 10),
@@ -144,42 +183,46 @@ class BillingPage extends StatelessWidget {
               },
               child: Obx(() {
                 final combinedList = generalController.combinedList;
-      
+
                 if (combinedList.isEmpty) {
                   return const Center(child: Text('No bookings found.'));
                 }
-      
+
                 return ListView.builder(
-                  physics: AlwaysScrollableScrollPhysics(),
                   itemCount: combinedList.length,
                   itemBuilder: (context, index) {
                     final item = combinedList[index];
-                    final status = item is ConsumerModel
-                        ? 'Consumer'
-                        : item is PaymentInModel
+                    final status =
+                        item is ConsumerModel
+                            ? 'Consumer'
+                            : item is PaymentInModel
                             ? 'Payment-In'
                             : 'EMW';
-      
+
                     return TransactionListTileWidget(
-                      title: item is ConsumerModel
-                          ? item.partyName
-                          : item is PaymentInModel
+                      title:
+                          item is ConsumerModel
+                              ? item.partyName
+                              : item is PaymentInModel
                               ? item.customerName
                               : (item as EMWBooking).partyName,
-                      startdate: item is ConsumerModel
-                          ? item.workDate.toString().split(' ')[0]
-                          : item is PaymentInModel
+                      startdate:
+                          item is ConsumerModel
+                              ? item.workDate.toString().split(' ')[0]
+                              : item is PaymentInModel
                               ? item.date.toString().split(' ')[0]
                               : item.startDate.toString().split(' ')[0],
-                      enddate: item is ConsumerModel
-                          ? ''
-                          : item is PaymentInModel
+                      enddate:
+                          item is ConsumerModel
+                              ? ''
+                              : item is PaymentInModel
                               ? ''
                               : item.endDate.toString().split(' ')[0],
                       status: status,
-                      total: item is ConsumerModel
-                          ? '${item.netAmount ?? 0} Rs'
-                          : item is PaymentInModel
+                      total:
+                          item is ConsumerModel
+                              ? '${item.netAmount ?? 0} Rs'
+                              : item is PaymentInModel
                               ? '${item.receivedAmount} Rs'
                               : '${item.netAmount ?? 0} Rs',
                       onTap: () {
@@ -197,16 +240,30 @@ class BillingPage extends StatelessWidget {
                         } else if (item is PaymentInModel) {
                           paymentInPay(item, organizationController);
                         } else {
-                          emwPay(item, false, organizationController);
+                          // emwPay(item, false, organizationController);
+                          emwPayQuick(item, organizationController);
                         }
                       },
                       share: () {
                         if (item is ConsumerModel) {
-                          consumerShare(item, organizationController, partyController);
+                          consumerShare(
+                            item,
+                            organizationController,
+                            partyController,
+                          );
                         } else if (item is PaymentInModel) {
-                          paymentInShare(item, organizationController, partyController);
+                          paymentInShare(
+                            item,
+                            organizationController,
+                            partyController,
+                          );
                         } else {
-                          emwShare(item, false, organizationController, partyController);
+                          emwShare(
+                            item,
+                            false,
+                            organizationController,
+                            partyController,
+                          );
                         }
                       },
                     );
@@ -230,10 +287,16 @@ class BillingPage extends StatelessWidget {
     );
   }
 
-  void paymentInPay(PaymentInModel item, OrganizationController organizationController) async {
-    final organization = await organizationController.fetchOrgById(item.organizationId);
+  void paymentInPay(
+    PaymentInModel item,
+    OrganizationController organizationController,
+  ) async {
+    final organization = await organizationController.fetchOrgById(
+      item.organizationId,
+    );
 
-    final upiData = 'upi://pay'
+    final upiData =
+        'upi://pay'
         '?pa=${Uri.encodeComponent(organization?['orgUPI'] ?? '')}'
         '&pn=${Uri.encodeComponent(organization?['orgName'] ?? 'Unknown Organization')}'
         '&am=${item.receivedAmount.toStringAsFixed(2)}'
@@ -253,14 +316,17 @@ class BillingPage extends StatelessWidget {
     OrganizationController organizationController,
     PartyController partyController,
   ) async {
-    final organization = await organizationController.fetchOrgById(item.organizationId);
+    final organization = await organizationController.fetchOrgById(
+      item.organizationId,
+    );
     final party = await partyController.fetchPartyById(item.customerId);
 
     final Map<String, dynamic> invoiceData = {
       'organizationName': organization?['orgName'] ?? 'Company Name',
       'organizationAddress': organization?['orgAddress'] ?? 'orgAddress',
       'organizationPhone': organization?['phoneNumber'] ?? 'Phone Number',
-      'invoiceNumber': item.id?.toString() ?? 'PAY-${DateTime.now().millisecondsSinceEpoch}',
+      'invoiceNumber':
+          item.id?.toString() ?? 'PAY-${DateTime.now().millisecondsSinceEpoch}',
       'clientName': party?['name'] ?? item.customerName,
       'clientPhone': party?['phone'] ?? '',
       'workDate': item.date,
@@ -293,7 +359,9 @@ class BillingPage extends StatelessWidget {
     OrganizationController organizationController,
     PartyController partyController,
   ) async {
-    final organization = await organizationController.fetchOrgById(item.organizationId);
+    final organization = await organizationController.fetchOrgById(
+      item.organizationId,
+    );
     final party = await partyController.fetchPartyById(item.partyId);
 
     final Map<String, dynamic> invoiceData = {
@@ -301,7 +369,8 @@ class BillingPage extends StatelessWidget {
       'organizationAddress': organization?['orgAddress'] ?? 'orgAddress',
       'organizationPhone': organization?['phoneNumber'] ?? 'Phone Number',
       'upiId': organization?['orgUPI'] ?? 'orgUPI',
-      'bankAccountName': organization?['accountHolderName'] ?? 'Account Holder Name',
+      'bankAccountName':
+          organization?['accountHolderName'] ?? 'Account Holder Name',
       'bankAccountNumber': organization?['accountNumber'] ?? 'Account Number',
       'bankIfscCode': organization?['accountIFSC'] ?? 'Account IFSC',
       'invoiceNumber': item.id,
@@ -336,6 +405,28 @@ class BillingPage extends StatelessWidget {
     Get.back();
   }
 
+  void emwPayQuick(
+    dynamic item,
+    OrganizationController organizationController,
+  ) async {
+    final organization = await organizationController.fetchOrgById(
+      item.organizationId,
+    );
+    final upiId = organization?['orgUPI'] ?? '';
+
+    // Simple message clients can't mess up
+    final quickMessage = '''
+Pay ₹${(item.netAmount ?? 0).toStringAsFixed(2)} to:
+
+UPI: $upiId
+
+Invoice: ${item.id}
+${organization?['orgName']}
+''';
+
+    await Share.share(quickMessage);
+  }
+
   void emwPay(
     dynamic item,
     bool isConsumer,
@@ -345,7 +436,8 @@ class BillingPage extends StatelessWidget {
       isConsumer ? item.organizationId : item.organizationId,
     );
 
-    final upiData = 'upi://pay'
+    final upiData =
+        'upi://pay'
         '?pa=${Uri.encodeComponent(organization?['orgUPI'] ?? '')}'
         '&pn=${Uri.encodeComponent(organization?['orgName'] ?? 'Unknown Organization')}'
         '&am=${(item.netAmount ?? 0).toStringAsFixed(2)}'
@@ -375,7 +467,9 @@ class BillingPage extends StatelessWidget {
     OrganizationController organizationController,
     PartyController partyController,
   ) async {
-    final organization = await organizationController.fetchOrgById(item.organizationId);
+    final organization = await organizationController.fetchOrgById(
+      item.organizationId,
+    );
     final party = await partyController.fetchPartyById(item.partyId);
 
     final Map<String, dynamic> invoiceData = {
@@ -410,9 +504,12 @@ class BillingPage extends StatelessWidget {
     dynamic item,
     OrganizationController organizationController,
   ) async {
-    final organization = await organizationController.fetchOrgById(item.organizationId);
+    final organization = await organizationController.fetchOrgById(
+      item.organizationId,
+    );
 
-    final upiData = 'upi://pay'
+    final upiData =
+        'upi://pay'
         '?pa=${Uri.encodeComponent(organization?['orgUPI'] ?? '')}'
         '&pn=${Uri.encodeComponent(organization?['orgName'] ?? 'Unknown Organization')}'
         '&am=${(item.netAmount ?? 0).toStringAsFixed(2)}'

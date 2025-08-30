@@ -1,0 +1,215 @@
+// import 'package:flutter/material.dart';
+// import 'package:get/get.dart';
+// import 'package:intl/intl.dart';
+// import 'package:tellus/models/employee_model.dart';
+// import 'package:tellus/services/admin/employee_controller.dart';
+// import 'package:tellus/views/widgets/custom_size_button.dart';
+// import 'package:tellus/views/widgets/dropdown_widget.dart';
+// import 'package:tellus/views/widgets/text_input_widget.dart';
+// import 'package:tellus/helper/helper.dart';
+
+// class EmployeeDetailsPage extends StatefulWidget {
+//   final EmployeeModel employee;
+//   final String userName;
+//   final String? role;
+//   final DateTime? joinedDate;
+//   const EmployeeDetailsPage({super.key, required this.employee, required this.userName, this.role, this.joinedDate});
+
+//   @override
+//   State<EmployeeDetailsPage> createState() => _EmployeeDetailsPageState();
+// }
+
+// class _EmployeeDetailsPageState extends State<EmployeeDetailsPage> {
+  
+//   final EmployeeController employeeController = Get.find<EmployeeController>();
+//   late TextEditingController paymentTypeController;
+//   late TextEditingController fixedSalaryController;
+//   late TextEditingController hourlyRateController;
+//   late TextEditingController statusController;
+
+//   @override
+//   void initState() {
+//     super.initState();
+//     paymentTypeController = TextEditingController(text: widget.employee.paymentType);
+//     fixedSalaryController = TextEditingController(text: widget.employee.fixedSalary?.toString() ?? '');
+//     hourlyRateController = TextEditingController(text: widget.employee.hourlyRate?.toString() ?? '');
+//     statusController = TextEditingController(text: widget.employee.status);
+//   }
+
+//   @override
+//   void dispose() {
+//     paymentTypeController.dispose();
+//     fixedSalaryController.dispose();
+//     hourlyRateController.dispose();
+//     statusController.dispose();
+//     super.dispose();
+//   }
+
+//   @override
+//   Widget build(BuildContext context) {
+//     return Scaffold(
+//       appBar: AppBar(
+//         title: Text('Employee Details', style: Theme.of(context).textTheme.titleLarge),
+//         backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+//         elevation: 0,
+//       ),
+//       body: SingleChildScrollView(
+//         child: Padding(
+//           padding: const EdgeInsets.all(16.0),
+//           child: Column(
+//             crossAxisAlignment: CrossAxisAlignment.center,
+//             children: [
+//               Card(
+//                 margin: const EdgeInsets.symmetric(vertical: 8.0),
+//                 child: Padding(
+//                   padding: const EdgeInsets.all(16.0),
+//                   child: SizedBox(
+//                     width: MediaQuery.of(context).size.width * 0.9,
+//                     child: Column(
+//                       crossAxisAlignment: CrossAxisAlignment.start,
+//                       children: [
+//                         Text('Employee Info', style: Theme.of(context).textTheme.titleMedium),
+//                         const SizedBox(height: 10),
+//                         Text('Name: ${widget.userName}', style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontSize: 15)),
+//                         const SizedBox(height: 10),
+//                         Text('Role: ${widget.role ?? "-"}', style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontSize: 15)),
+//                         const SizedBox(height: 10),
+//                         Text('Joined Date: ${widget.joinedDate != null ? DateFormat('dd-MM-yyyy').format(customParseDate(widget.joinedDate!.toIso8601String())) : "-"}', style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontSize: 15)),
+//                       ],
+//                     ),
+//                   ),
+//                 ),
+//               ),
+//               Card(
+//                 margin: const EdgeInsets.symmetric(vertical: 8.0),
+//                 child: Padding(
+//                   padding: const EdgeInsets.all(16.0),
+//                   child: Column(
+//                     crossAxisAlignment: CrossAxisAlignment.start,
+//                     children: [
+//                       Text('Employment Settings', style: Theme.of(context).textTheme.titleMedium),
+//                       const SizedBox(height: 10),
+//                       SizedBox(
+//                         width: MediaQuery.of(context).size.width * 0.9,
+//                         child: CustomDropdown(
+//                           label: 'Payment Type',
+//                           selectedValue: paymentTypeController.text,
+//                           items: const ['Fixed', 'Per Hour', 'Per Work'],
+//                           onChanged: (value) {
+//                             setState(() {
+//                               paymentTypeController.text = value!;
+//                             });
+//                           },
+//                         ),
+//                       ),
+//                       const SizedBox(height: 8),
+//                       if (paymentTypeController.text == 'Fixed')
+//                         Row(
+//                           children: [
+//                             Expanded(
+//                               child: CustomTextInput(
+//                                 label: 'Fixed Salary',
+//                                 controller: fixedSalaryController,
+//                                 icon: Icons.attach_money,
+//                                 keyboardType: TextInputType.number,
+//                                 validator: (value) {
+//                                   if (value == null || value.isEmpty) {
+//                                     return 'Fixed Salary is required';
+//                                   }
+//                                   return null;
+//                                 },
+//                               ),
+//                             ),
+//                           ],
+//                         ),
+//                       if (paymentTypeController.text == 'Per Hour')
+//                         Row(
+//                           children: [
+//                             Expanded(
+//                               child: CustomTextInput(
+//                                 label: 'Hourly Rate',
+//                                 controller: hourlyRateController,
+//                                 icon: Icons.timer,
+//                                 keyboardType: TextInputType.number,
+//                                 validator: (value) {
+//                                   if (value == null || value.isEmpty) {
+//                                     return 'Hourly Rate is required';
+//                                   }
+//                                   return null;
+//                                 },
+//                               ),
+//                             ),
+//                           ],
+//                         ),
+//                       if (paymentTypeController.text == 'Per Work')
+//                         Padding(
+//                           padding: const EdgeInsets.symmetric(vertical: 8.0),
+//                           child: Text(
+//                             'Salary is based on the bata amount.',
+//                             style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Colors.grey),
+//                           ),
+//                         ),
+//                       const SizedBox(height: 8),
+//                       SizedBox(
+//                         width: MediaQuery.of(context).size.width * 0.9,
+//                         child: CustomDropdown(
+//                           label: 'Status',
+//                           selectedValue: statusController.text,
+//                           items: const ['Active', 'Left'],
+//                           onChanged: (value) {
+//                             setState(() {
+//                               statusController.text = value!;
+//                             });
+//                           },
+//                         ),
+//                       ),
+//                       const SizedBox(height: 16),
+//                       CustomSubmitButton(
+//                         text: 'Save',
+//                         isLoading: false,
+//                         onTap: () async {
+//                           final updated = EmployeeModel(
+//                             id: widget.employee.id,
+//                             userId: widget.employee.userId,
+//                             organizationId: widget.employee.organizationId,
+//                             paymentType: paymentTypeController.text,
+//                             fixedSalary: fixedSalaryController.text.isNotEmpty ? double.tryParse(fixedSalaryController.text) : null,
+//                             hourlyRate: hourlyRateController.text.isNotEmpty ? double.tryParse(hourlyRateController.text) : null,
+//                             status: statusController.text,
+//                           );
+//                           await employeeController.updateEmployee(updated);
+//                           Get.snackbar('Success', 'Employee updated', snackPosition: SnackPosition.TOP);
+//                           Navigator.pop(context);
+//                         },
+//                         width: MediaQuery.of(context).size.width * 0.9,
+//                       ),
+//                     ],
+//                   ),
+//                 ),
+//               ),
+//               Card(
+//                 margin: const EdgeInsets.symmetric(vertical: 8.0),
+//                 child: Padding(
+//                   padding: const EdgeInsets.all(16.0),
+//                   child: SizedBox(
+//                     width: MediaQuery.of(context).size.width * 0.9,
+//                     child: Column(
+//                       crossAxisAlignment: CrossAxisAlignment.start,
+//                       children: [
+//                         Text('Payment History', style: Theme.of(context).textTheme.titleMedium),
+//                         const SizedBox(height: 10),
+//                         // TODO: Replace with actual payment history list
+//                         Text('No payment history available.', style: Theme.of(context).textTheme.bodyMedium),
+//                       ],
+//                     ),
+//                   ),
+//                 ),
+//               ),
+//               // You can add more cards for payroll settings, history, etc.
+//             ],
+//           ),
+//         ),
+//       ),
+//     );
+//   }
+// }

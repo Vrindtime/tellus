@@ -9,6 +9,9 @@ import 'package:get/get.dart';
 import 'package:tellus/services/admin/admin_controller.dart';
 import 'package:tellus/services/auth/auth_service.dart';
 
+
+// TODO:  We have to revamp the whole page to include the additional details
+
 class AdminProfileSettingsPage extends StatefulWidget {
   const AdminProfileSettingsPage({super.key});
 
@@ -208,6 +211,7 @@ class AdminProfileSettingsPageState extends State<AdminProfileSettingsPage> {
                       isLoading = true;
                     });
                     final data = {
+                      // TODO: to add address and other stuff
                       'name': _nameController.text,
                       'phoneNumber': _phoneController.text,
                       'location': _locationController.text,

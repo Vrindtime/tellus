@@ -26,10 +26,10 @@ class TransactionListTileWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      // height: MediaQuery.of(context).size.height * 0.13,
+      height: MediaQuery.of(context).size.height * 0.134,
       child: AnimationList(
-        duration: 1200,
-        shrinkWrap: true,
+        reBounceDepth: 10,
+        duration: 1300,
         physics: const NeverScrollableScrollPhysics(),
         children: [
           Container(

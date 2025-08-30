@@ -87,15 +87,15 @@ class _CreateTaskPageState extends State<CreateTaskPage> {
   /// Returns null if validation fails.
   EMWBooking? _validateAndCreateBookingData() {
     if (_selectedPartyId == null ||_clientNameController.text == null || _clientNameController.text.isEmpty) {
-       Get.snackbar('Error', 'Please select a Client Name from the suggestions.', snackPosition: SnackPosition.BOTTOM);
+       Get.snackbar('Error', 'Please select a Client Name from the suggestions.', snackPosition: SnackPosition.TOP);
        return null;
     }
     if (_selectedVehicleId == null || _vehicleControllerField.text == null || _vehicleControllerField.text.isEmpty) {
-       Get.snackbar('Error', 'Please select a Vehicle from the suggestions.', snackPosition: SnackPosition.BOTTOM);
+       Get.snackbar('Error', 'Please select a Vehicle from the suggestions.', snackPosition: SnackPosition.TOP);
        return null;
     }
     if (_locationController.text.trim().isEmpty) {
-       Get.snackbar('Error', 'Please enter a Work Location.', snackPosition: SnackPosition.BOTTOM);
+       Get.snackbar('Error', 'Please enter a Work Location.', snackPosition: SnackPosition.TOP);
        return null;
     }
      // Add more validation as needed (e.g., date, deposit format)
