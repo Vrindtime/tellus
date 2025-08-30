@@ -88,12 +88,42 @@
 //   return response.json();
 // }
 
+import { Client, Databases } from 'node-appwrite';
+
 export default async ({ req, res, log, error }) => {
-  log('Function started successfully!');
+  log('Testing database permissions...');
   
-  return res.json({ 
-    success: true, 
-    message: 'Hello from Appwrite function!',
-    timestamp: new Date().toISOString()
-  });
+  try {
+    const client = new Client()
+      .setEndpoint('https://cloud.appwrite.io/v1')
+      .setProject('67ddfedd00142dbfb48e')
+      .setKey('68257e10026f7c97132'); // Your API key
+
+    const databases = new Databases(client);
+    
+    log('Client initialized, attempting database query...');
+
+    // Test simple database query - list first 3 documents
+    const result = await databases.listDocuments(
+      '67e640bd00005fc192ff',    // Your database ID
+      '67fd925a0037a0a4016c',   // Your first collection ID (EMW)
+      [],                       // No queries
+      3                         // Limit to 3 documents
+    );
+
+    log(`Successfully found ${result.documents.length} documents`);
+    
+    return res.json({ 
+      success: true, 
+      documentsFound: result.documents.length,
+      message: 'Database permissions working!'
+    });
+    
+  } catch (err) {
+    error('Database query failed:', err.message);
+    return res.json({ 
+      error: err.message,
+      success: false 
+    }, 500);
+  }
 };
