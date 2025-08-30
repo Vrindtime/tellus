@@ -95,20 +95,19 @@ export default async ({ req, res, log, error }) => {
   
   try {
     const client = new Client()
-      .setEndpoint('https://cloud.appwrite.io/v1')
-      .setProject('67ddfedd00142dbfb48e')
-      .setKey('68b257e10026f7c97132'); // Your API key
+      .setEndpoint(process.env.APPWRITE_FUNCTION_ENDPOINT)
+      .setProject(process.env.APPWRITE_FUNCTION_PROJECT_ID)
+      .setKey(process.env.APPWRITE_API_KEY); // Use environment variable
 
     const databases = new Databases(client);
     
-    log('Client initialized, attempting database query...');
+    log('Client initialized with environment variables...');
 
-    // Test simple database query - list first 3 documents
     const result = await databases.listDocuments(
-      '67e640bd00005fc192ff',    // Your database ID
-      '67fd925a0037a0a4016c',   // Your first collection ID (EMW)
-      [],                       // No queries
-      3                         // Limit to 3 documents
+      '67e640bd00005fc192ff',
+      '67fd925a0037a0a4016c',
+      [],
+      3
     );
 
     log(`Successfully found ${result.documents.length} documents`);
@@ -121,9 +120,7 @@ export default async ({ req, res, log, error }) => {
     
   } catch (err) {
     error('Database query failed:', err.message);
-    return res.json({ 
-      error: err.message,
-      success: false 
-    }, 500);
+    return res.json({ error: err.message }, 500);
   }
 };
+
