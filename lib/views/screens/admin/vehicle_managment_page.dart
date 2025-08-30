@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:page_transition/page_transition.dart';
 import 'package:tellus/services/vehicle/vehicle_controller.dart';
+import 'package:tellus/views/screens/accountant/vehicle_profit_report_page.dart';
 import 'package:tellus/views/screens/driver/settings/vehicle_settings_page.dart';
 import 'package:tellus/views/widgets/extras/custom_list_tile_widget.dart';
 import 'package:tellus/views/widgets/text_input_widget.dart';
@@ -24,7 +25,7 @@ class VehicleManagementPage extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   SizedBox(
-                    width: MediaQuery.of(context).size.width * 0.75, 
+                    width: MediaQuery.of(context).size.width * 0.65, 
                     child: CustomTextInput(
                       label: 'Search by Registration Number', 
                       controller: vehicleController.controller, 
@@ -48,6 +49,25 @@ class VehicleManagementPage extends StatelessWidget {
                           PageTransition(
                             type: PageTransitionType.rightToLeft,
                             child: VehicleSettingsPage(),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                  Container(
+                    decoration: BoxDecoration(
+                      color: Theme.of(context).colorScheme.primary,
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: IconButton(
+                      icon: const Icon(Icons.monetization_on_sharp),
+                      color: Colors.white,
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          PageTransition(
+                            type: PageTransitionType.rightToLeft,
+                            child: VehicleProfitReportPage(),
                           ),
                         );
                       },

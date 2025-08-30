@@ -1,4 +1,4 @@
-import { Client, Databases, Query } from "node-appwrite";
+import { Client, Databases, Query, ID } from "node-appwrite";
 
 export default async ({ req, res, log, error }) => {
   try {
@@ -15,7 +15,7 @@ export default async ({ req, res, log, error }) => {
     for (let i = 0; i < 7; i++) {
       const date = new Date(today);
       date.setDate(today.getDate() + i);
-      weekDates.push(date.toISOString().split("T")[0]); // "YYYY-MM-DD"
+      weekDates.push(date.toISOString().split("T")[0]);
     }
 
     log(`Checking for bookings for the week: ${weekDates.join(', ')}`);
@@ -37,7 +37,7 @@ export default async ({ req, res, log, error }) => {
         ),
       ]);
 
-      // Add date info to each booking for the notification message
+      // Add date info to each booking for notifications
       const emwBookingsWithDate = emwResults.documents.map(booking => ({
         ...booking,
         workDateStr: dateStr,
@@ -55,18 +55,32 @@ export default async ({ req, res, log, error }) => {
 
     log(`Found ${allBookingsThisWeek.length} total bookings for this week`);
 
-    // Send notifications for each booking with date info
+    // Send notifications and save to database
     for (const booking of allBookingsThisWeek) {
       const workDate = new Date(booking.workDateStr);
       const dateLabel = getDateLabel(workDate);
+      const title = `🚧 Work Scheduled!`;
+      const message = `${booking.partyName} at ${booking.workLocation} - ${dateLabel} (${booking.workDateStr})`;
       
+      // 1. Send OneSignal notification
       await sendOneSignalNotification({
-        title: `🚧 Work Scheduled!`,
-        message: `${booking.partyName} at ${booking.workLocation} - ${dateLabel} (${booking.workDateStr})`,
+        title: title,
+        message: message,
         organizationId: booking.organizationId,
       });
 
-      log(`Notification sent for: ${booking.partyName} on ${booking.workDateStr}`);
+      // 2. Save notification to database
+      await saveNotificationToDatabase({
+        databases,
+        title: title,
+        message: message,
+        organizationId: booking.organizationId,
+        bookingType: booking.collectionType,
+        partyName: booking.partyName,
+        workLocation: booking.workLocation,
+      });
+
+      log(`Notification sent and saved for: ${booking.partyName} on ${booking.workDateStr}`);
     }
 
     return res.json({
@@ -83,6 +97,36 @@ export default async ({ req, res, log, error }) => {
     return res.json({ error: err.message }, 500);
   }
 };
+
+// Helper function to save notification to database
+async function saveNotificationToDatabase({
+  databases,
+  title,
+  message,
+  organizationId,
+  bookingType,
+  partyName,
+  workLocation
+}) {
+  try {
+    await databases.createDocument(
+      "67e640bd00005fc192ff", // Your database ID
+      "notification", // Your notification collection ID
+      ID.unique(),
+      {
+        title: title,
+        message: message,
+        organizationId: organizationId,
+        date: new Date().toISOString(),
+        bookingType: bookingType,
+        partyName: partyName,
+        workLocation: workLocation,
+      }
+    );
+  } catch (err) {
+    console.log(`Error saving notification to database: ${err.message}`);
+  }
+}
 
 // Helper function to get user-friendly date labels
 function getDateLabel(date) {
