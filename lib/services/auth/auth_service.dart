@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:http/http.dart' as http;
+import 'package:onesignal_flutter/onesignal_flutter.dart';
 import 'package:tellus/core/id.dart';
 import 'package:tellus/services/auth/otp_verfication_controller.dart';
 
@@ -55,11 +56,13 @@ class AuthService extends GetxService {
   Future<void> setRole(String newRole) async {
     role.value = newRole;
     await box.write('role', newRole);
+    OneSignal.User.addTags({'role': newRole});
   }
 
   Future<void> setOrgId(String newOrgId) async {
     orgId.value = newOrgId;
     await box.write('orgId', newOrgId);
+    OneSignal.User.addTags({'organizationId': newOrgId});
   }
 
   void saveToMemory(String key, dynamic value) {
