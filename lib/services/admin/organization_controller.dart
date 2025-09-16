@@ -17,6 +17,7 @@ class OrganizationController extends GetxController {
   RxBool isLoading = false.obs;
 
   TextEditingController orgTextController = TextEditingController();
+  TextEditingController phoneLookupController = TextEditingController();
 
   /// Adds a new organization document to the organizations collection.
   /// [orgName] is the name of the organization and [phoneNumbers] is the list of associated phone numbers.
@@ -51,7 +52,9 @@ class OrganizationController extends GetxController {
           'role': 'admin',
         },
       );
-      debugPrint('Admin user created successfully for New Org: ${userDocument.$id}');
+      debugPrint(
+        'Admin user created successfully for New Org: ${userDocument.$id}',
+      );
       return orgDocument;
     } catch (e) {
       debugPrint('Error creating organization and admin user: $e');
@@ -116,6 +119,69 @@ class OrganizationController extends GetxController {
     }
   }
 
+  /// Finds organizations linked to a given phone number by querying the users collection.
+  /// Returns a list of maps with `orgId` and `orgName`.
+  Future<List<Map<String, String>>> findOrganizationsByPhone(
+    String phone,
+  ) async {
+    try {
+      final normalized = authService.normalizePhoneNumber(phone);
+      // First, find users with this phone number
+      final users = await databases.listDocuments(
+        databaseId: databaseId,
+        collectionId: CId.userCollectionId,
+        queries: [
+          Query.equal('phoneNumber', [normalized]),
+        ],
+      );
+
+      List<String> orgIds =
+          users.documents
+              .map((doc) => doc.data['organizationId'].toString())
+              .toSet()
+              .toList();
+
+      // If none found, try legacy without '+91'
+      if (orgIds.isEmpty) {
+        final legacy =
+            normalized.startsWith('+91') ? normalized.substring(3) : normalized;
+        final usersLegacy = await databases.listDocuments(
+          databaseId: databaseId,
+          collectionId: CId.userCollectionId,
+          queries: [
+            Query.equal('phoneNumber', [legacy]),
+          ],
+        );
+        orgIds =
+            usersLegacy.documents
+                .map((doc) => doc.data['organizationId'].toString())
+                .toSet()
+                .toList();
+      }
+
+      if (orgIds.isEmpty) return [];
+
+      // Fetch organization names for the distinct orgIds
+      List<Map<String, String>> results = [];
+      for (final id in orgIds) {
+        try {
+          final org = await databases.getDocument(
+            databaseId: databaseId,
+            collectionId: orgsCollectionId,
+            documentId: id,
+          );
+          results.add({'orgId': id, 'orgName': org.data['orgName'].toString()});
+        } catch (_) {
+          // skip bad ids
+        }
+      }
+      return results;
+    } catch (e) {
+      debugPrint('Error finding organizations by phone: $e');
+      return [];
+    }
+  }
+
   Future<void> selectOrgAndNavigate(
     TextEditingController orgTextController,
   ) async {
@@ -135,9 +201,7 @@ class OrganizationController extends GetxController {
           throw Exception('Organization ID is missing. Please try again.');
         }
         selectedOrg.value = orgId;
-        Get.toNamed(
-          '/login',
-        );
+        Get.toNamed('/login');
       } else {
         // No matching organization found
         Get.snackbar('Error', 'Organization not found');
@@ -182,10 +246,7 @@ class OrganizationController extends GetxController {
       );
       return true;
     } catch (e) {
-      Get.snackbar(
-        'Error',
-        'Failed to update organization: $e',
-      );
+      Get.snackbar('Error', 'Failed to update organization: $e');
       debugPrint('Error updating organization: $e');
       return false;
     }

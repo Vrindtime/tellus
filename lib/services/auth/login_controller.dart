@@ -10,6 +10,10 @@ class LoginController extends GetxController {
   RxString fetchedUserId = ''.obs;
   // RxString? selectedOrg = Get.find<OrganizationController>().selectedOrg;
 
+  String normalizeWithDefault(String raw) {
+    return authService.normalizePhoneNumber(raw, defaultCountryCode: '+91');
+  }
+
   String removeCountryCode(String phone) {
     // Check if the phone number starts with '+91'
     if (phone.startsWith('+91')) {
@@ -22,21 +26,23 @@ class LoginController extends GetxController {
 
   Future<void> sendOTP(String selectedOrg) async {
     isLoading.value = true;
+
     /// The OTP is send after the app makes sures that the user exists in the system
     try {
+      final normalizedForLookup = normalizeWithDefault(phoneNumber.value);
       String? fetchedUserId = await authService.validatePhoneNumber(
         selectedOrg,
-        phoneNumber.value,
+        normalizedForLookup,
       );
       if (fetchedUserId != null) {
         try {
           // to send OTP to the phone number
-          String phoneNumberWithoutCountryCode = removeCountryCode(
-            phoneNumber.value,
-          );
+          // String phoneNumberWithoutCountryCode = removeCountryCode(
+          //   normalizedForLookup,
+          // );
           bool otpSent = await authService.createPhoneSession(
             fetchedUserId,
-            phoneNumberWithoutCountryCode,
+            normalizedForLookup,
           );
 
           if (otpSent) {

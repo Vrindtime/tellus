@@ -15,7 +15,7 @@ class AuthService extends GetxService {
   late Account account;
   late Databases databases;
 
-  RxString authToken =''.obs;
+  RxString authToken = ''.obs;
   RxString orgId = ''.obs;
   RxString userId = ''.obs;
   RxString role = ''.obs;
@@ -77,6 +77,27 @@ class AuthService extends GetxService {
     await box.erase();
   }
 
+  /// Normalize a phone number to a canonical format.
+  /// - Removes spaces, dashes, and parentheses
+  /// - Ensures it starts with a '+' country code
+  /// - If no country code present and [defaultCountryCode] provided, prefixes it
+  String normalizePhoneNumber(
+    String rawPhone, {
+    String defaultCountryCode = '+91',
+  }) {
+    String cleaned = rawPhone.trim();
+    cleaned = cleaned.replaceAll(RegExp(r"[\s\-()]+"), '');
+    if (cleaned.startsWith('+')) {
+      return cleaned;
+    }
+    // Handle common case: 10-digit local numbers (India by default)
+    if (RegExp(r'^\d{10,}$').hasMatch(cleaned)) {
+      return '$defaultCountryCode$cleaned';
+    }
+    // Fallback: return as-is to avoid over-aggressive mutation
+    return cleaned;
+  }
+
   Future<String?> validatePhoneNumber(
     String orgName,
     String phoneNumber,
@@ -84,12 +105,13 @@ class AuthService extends GetxService {
     debugPrint('----- org value: $orgName in validatePhoneNumber()-----');
     debugPrint('----- phone value: $phoneNumber in validatePhoneNumber()-----');
     try {
+      final normalized = normalizePhoneNumber(phoneNumber);
       final response = await databases.listDocuments(
         databaseId: CId.databaseId,
         collectionId: CId.userCollectionId,
         queries: [
           Query.equal('organizationId', orgName),
-          Query.equal('phoneNumber', phoneNumber),
+          Query.equal('phoneNumber', normalized),
         ],
       );
       debugPrint(
@@ -100,10 +122,30 @@ class AuthService extends GetxService {
 
         if (userId.$id.isNotEmpty) {
           debugPrint('----- User Found: ${userId.$id} -----');
-          createPhoneSession(userId.$id, phoneNumber);
           return userId.$id;
         } else {
           debugPrint('----- phoneNumber is null -----');
+        }
+      } else {
+        // Fallback: try legacy records stored without '+91'
+        final legacy =
+            phoneNumber.startsWith('+91')
+                ? phoneNumber.substring(3)
+                : phoneNumber;
+        final responseLegacy = await databases.listDocuments(
+          databaseId: CId.databaseId,
+          collectionId: CId.userCollectionId,
+          queries: [
+            Query.equal('organizationId', orgName),
+            Query.equal('phoneNumber', legacy),
+          ],
+        );
+        if (responseLegacy.documents.isNotEmpty) {
+          final userId = responseLegacy.documents.first;
+          if (userId.$id.isNotEmpty) {
+            debugPrint('----- User Found (legacy): ${userId.$id} -----');
+            return userId.$id;
+          }
         }
       }
       return null;
@@ -119,12 +161,13 @@ class AuthService extends GetxService {
     debugPrint('----- orgId: $orgId in validateUser()-----');
     debugPrint('----- phoneNumber: $phoneNumber in validateUser()-----');
     try {
+      final normalized = normalizePhoneNumber(phoneNumber);
       final response = await databases.listDocuments(
         databaseId: CId.databaseId,
         collectionId: CId.userCollectionId,
         queries: [
           Query.equal('organizationId', orgId),
-          Query.equal('phoneNumber', phoneNumber),
+          Query.equal('phoneNumber', normalized),
         ],
       );
 
@@ -139,16 +182,37 @@ class AuthService extends GetxService {
 
         return user.$id; // Return the user ID
       } else {
-        debugPrint(
-          '----- No user found matching the organization and phone number. validateUser()',
+        // Fallback: try legacy number without '+91'
+        final legacy =
+            phoneNumber.startsWith('+91')
+                ? phoneNumber.substring(3)
+                : phoneNumber;
+        final responseLegacy = await databases.listDocuments(
+          databaseId: CId.databaseId,
+          collectionId: CId.userCollectionId,
+          queries: [
+            Query.equal('organizationId', orgId),
+            Query.equal('phoneNumber', legacy),
+          ],
         );
-        debugPrint(
-          '----- validateUser() values ; \nresponse: No documents found -----',
-        );
-        debugPrint(
-          '----- Values in cache: ----- userId:${box.read('userId')} ----- orgId: ${box.read('orgId')} ---- role: ${box.read('role')}',
-        );
-        return null;
+        if (responseLegacy.documents.isNotEmpty) {
+          final user = responseLegacy.documents.first;
+          await setUserId(user.$id);
+          await setRole(user.data['role']);
+          await setOrgId(orgId);
+          return user.$id;
+        } else {
+          debugPrint(
+            '----- No user found matching the organization and phone number. validateUser()',
+          );
+          debugPrint(
+            '----- validateUser() values ; \nresponse: No documents found -----',
+          );
+          debugPrint(
+            '----- Values in cache: ----- userId:${box.read('userId')} ----- orgId: ${box.read('orgId')} ---- role: ${box.read('role')}',
+          );
+          return null;
+        }
       }
     } catch (e) {
       debugPrint('----- validateUser() Error validating user: $e ----');
@@ -192,14 +256,50 @@ class AuthService extends GetxService {
     );
     final url = 'https://cpaas.messagecentral.com/verification/v3/send';
 
+    // Ensure we pass country code separately and local number without '+'
+    final normalized = normalizePhoneNumber(phoneNumber);
+    // Prefer known country codes to avoid greedy captures (e.g., '+917')
+    final List<String> knownCodes = [
+      '+971',
+      '+968',
+      '+91',
+      '+49',
+      '+44',
+      '+1',
+      '+33',
+      '+81',
+      '+86',
+      '+61',
+    ];
+    String country;
+    String local;
+    final String matchedCode = knownCodes.firstWhere(
+      (code) => normalized.startsWith(code),
+      orElse: () => '',
+    );
+    if (matchedCode.isNotEmpty) {
+      country = matchedCode.substring(1);
+      local = normalized.substring(matchedCode.length);
+    } else {
+      final match = RegExp(r'^\+(\d{1,3})(\d+)$').firstMatch(normalized);
+      country = match != null ? match.group(1)! : '91';
+      local =
+          match != null
+              ? match.group(2)!
+              : normalized.replaceAll(RegExp(r'[^0-9]'), '');
+    }
+
     final queryParams = {
-      'countryCode': '91',
+      'countryCode': country,
       'flowType': 'WHATSAPP',
-      'mobileNumber': phoneNumber,
+      'mobileNumber': local,
     };
 
     debugPrint('-----createPhoneSession()-----Auth token: ${authToken.value}');
-    debugPrint('-----createPhoneSession()-----Phone Number: $phoneNumber');
+    debugPrint('-----createPhoneSession()-----Phone Number: $normalized');
+    debugPrint(
+      '-----createPhoneSession()-----countryCode: $country, mobileNumber: $local',
+    );
 
     try {
       final response = await http.post(
@@ -251,7 +351,9 @@ class AuthService extends GetxService {
     debugPrint("-----verifyOTP()-----User Entered OTP: $otp");
     String authT = authToken.value;
     if (authT.isEmpty) {
-      debugPrint("-----verifyOTP()-----Auth token is empty. Generating a new one.");
+      debugPrint(
+        "-----verifyOTP()-----Auth token is empty. Generating a new one.",
+      );
       authT = await generateToken();
     }
 
@@ -260,7 +362,9 @@ class AuthService extends GetxService {
     debugPrint("-----verifyOTP()-----Verification ID: $verificationId");
 
     if (verificationId.isEmpty) {
-      debugPrint("-----verifyOTP()-----Verification ID is empty, cannot proceed.");
+      debugPrint(
+        "-----verifyOTP()-----Verification ID is empty, cannot proceed.",
+      );
       return false;
     }
 
@@ -321,5 +425,4 @@ class AuthService extends GetxService {
     clearCache(); //remove everyting from the cache
     debugPrint('User logged out and cache cleared.');
   }
-
 }

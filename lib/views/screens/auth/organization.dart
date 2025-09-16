@@ -15,15 +15,15 @@ class OrganizationPage extends StatefulWidget {
 }
 
 class _OrganizationPageState extends State<OrganizationPage> {
-  final OrganizationController _orgController = Get.put(OrganizationController());
+  final OrganizationController _orgController = Get.put(
+    OrganizationController(),
+  );
   final TextEditingController _orgTextController = TextEditingController();
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        forceMaterialTransparency: true,
-      ),
+      appBar: AppBar(forceMaterialTransparency: true),
       body: Center(
         child: Padding(
           padding: const EdgeInsets.all(26.0),
@@ -100,29 +100,43 @@ class _OrganizationPageState extends State<OrganizationPage> {
   }
 
   Widget _buildRegistrationPrompt(BuildContext context) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
+    return Column(
       children: [
-        Text(
-          'Not Registered? ',
-          style: Theme.of(
-            context,
-          ).textTheme.bodySmall?.copyWith(color: Colors.black),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(
+              'Not Registered? ',
+              style: Theme.of(
+                context,
+              ).textTheme.bodySmall?.copyWith(color: Colors.black),
+            ),
+            GestureDetector(
+              onTap: () async {
+                // Open the modal bottom sheet to add a new organization.
+                await showModalBottomSheet(
+                  context: context,
+                  isScrollControlled: true,
+                  builder: (_) => const AddOrganizationModal(),
+                );
+                Get.back();
+              },
+              child: Text(
+                'Add Organization',
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: Theme.of(context).colorScheme.secondary,
+                ),
+              ),
+            ),
+          ],
         ),
+        const SizedBox(height: 14),
         GestureDetector(
-          onTap: () async {
-            // Open the modal bottom sheet to add a new organization.
-            await showModalBottomSheet(
-              context: context,
-              isScrollControlled: true,
-              builder: (_) => const AddOrganizationModal(),
-            );
-            Get.back();
-          },
+          onTap: _openFindOrgByPhone,
           child: Text(
-            'Add Organization',
+            'Forgot org? Find by phone number',
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
-              color: Theme.of(context).colorScheme.secondary,
+              color: Theme.of(context).colorScheme.primary,
             ),
           ),
         ),
@@ -160,5 +174,110 @@ class _OrganizationPageState extends State<OrganizationPage> {
         childCurrent: widget,
       ),
     );
+  }
+
+  void _openFindOrgByPhone() async {
+    await showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      builder: (_) => _FindOrgByPhoneModal(orgController: _orgController),
+    );
+  }
+}
+
+class _FindOrgByPhoneModal extends StatefulWidget {
+  final OrganizationController orgController;
+  const _FindOrgByPhoneModal({required this.orgController});
+
+  @override
+  State<_FindOrgByPhoneModal> createState() => _FindOrgByPhoneModalState();
+}
+
+class _FindOrgByPhoneModalState extends State<_FindOrgByPhoneModal> {
+  final TextEditingController _phoneController = TextEditingController();
+  bool _isLoading = false;
+  List<Map<String, String>> _results = [];
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: EdgeInsets.only(
+        left: 16,
+        right: 16,
+        top: 16,
+        bottom: MediaQuery.of(context).viewInsets.bottom + 16,
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          CustomTextInput(
+            label: 'Enter your phone number',
+            controller: _phoneController,
+            keyboardType: TextInputType.phone,
+            icon: Icons.phone,
+          ),
+          const SizedBox(height: 12),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: [
+              TextButton(
+                onPressed: _isLoading ? null : () => Navigator.pop(context),
+                child: const Text('Cancel'),
+              ),
+              const SizedBox(width: 8),
+              FilledButton(
+                onPressed: _isLoading ? null : _onFind,
+                child:
+                    _isLoading
+                        ? const SizedBox(
+                          width: 16,
+                          height: 16,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                        : const Text('Find'),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          if (_results.isNotEmpty)
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Divider(),
+                ..._results.map(
+                  (e) => ListTile(
+                    leading: const Icon(Icons.business),
+                    title: Text(e['orgName'] ?? ''),
+                    subtitle: Text('ID: ${e['orgId'] ?? ''}'),
+                    onTap: () {
+                      widget.orgController.selectedOrg.value = e['orgId']!;
+                      Navigator.pop(context);
+                      Get.toNamed('/login');
+                    },
+                  ),
+                ),
+              ],
+            ),
+        ],
+      ),
+    );
+  }
+
+  void _onFind() async {
+    final raw = _phoneController.text.trim();
+    final digitsOnly = raw.replaceAll(RegExp(r'[^0-9+]'), '');
+    if (digitsOnly.replaceAll(RegExp(r'[^0-9]'), '').length < 10) {
+      Get.snackbar('Error', 'Please enter a valid phone number');
+      return;
+    }
+    setState(() => _isLoading = true);
+    final res = await widget.orgController.findOrganizationsByPhone(digitsOnly);
+    setState(() {
+      _results = res;
+      _isLoading = false;
+    });
+    if (res.isEmpty) {
+      Get.snackbar('Not found', 'No organizations linked to this phone');
+    }
   }
 }

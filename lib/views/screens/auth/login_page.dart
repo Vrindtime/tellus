@@ -21,14 +21,7 @@ class _LoginPageState extends State<LoginPage> {
 
   String selectedCountryCode = '+91';
 
-  List<String> countryCodeList = [
-    '+91',
-    '+1',
-    '+971',
-    '+968',
-    '+44',
-    '+49',
-  ];
+  List<String> countryCodeList = ['+91', '+1', '+971', '+968', '+44', '+49'];
 
   @override
   Widget build(BuildContext context) {
@@ -80,12 +73,23 @@ class _LoginPageState extends State<LoginPage> {
                   isLoading: loginController.isLoading.value,
                   onTap: () {
                     // TODO: Add more country codes
-                    if (phoneController.text.isEmpty) {
+                    final raw = phoneController.text.trim();
+                    if (raw.isEmpty) {
                       Get.snackbar('Error', 'Please enter a phone number');
                       return;
                     }
+                    // Basic numeric validation (10+ digits) before prefixing
+                    final digitsOnly = raw.replaceAll(RegExp(r'[^0-9]'), '');
+                    if (digitsOnly.length < 10) {
+                      Get.snackbar(
+                        'Error',
+                        'Please enter a valid phone number',
+                      );
+                      return;
+                    }
+                    // Build full number and let controller/service normalize further
                     loginController.phoneNumber.value =
-                        '$selectedCountryCode${phoneController.text}';
+                        '$selectedCountryCode$digitsOnly';
                     String selectedOrg =
                         Get.find<OrganizationController>().selectedOrg.value;
                     loginController.sendOTP(selectedOrg);

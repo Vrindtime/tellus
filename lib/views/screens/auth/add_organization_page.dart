@@ -148,7 +148,13 @@ class _AddOrganizationModalState extends State<AddOrganizationModal> {
             onTap: () async {
               String orgName = orgNameController.text.trim();
               String userName = userNameController.text.trim();
-              String phoneNumbersStr = selectedCountryCode+phoneNumbersController.text.trim();
+              String rawPhone = phoneNumbersController.text.trim();
+              String digitsOnly = rawPhone.replaceAll(RegExp(r'[^0-9]'), '');
+              if (digitsOnly.length < 10) {
+                Get.snackbar('Error', 'Please enter a valid phone number');
+                return;
+              }
+              String phoneNumbersStr = selectedCountryCode + digitsOnly;
               if (orgName.isEmpty ||
                   phoneNumbersStr.isEmpty ||
                   userName.isEmpty) {
