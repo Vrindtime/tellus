@@ -155,6 +155,13 @@ class _AddOrganizationModalState extends State<AddOrganizationModal> {
                 return;
               }
               String phoneNumbersStr = selectedCountryCode + digitsOnly;
+              // Validate phone number has country code
+              if (!phoneNumbersStr.startsWith(selectedCountryCode)) {
+                phoneNumbersStr = selectedCountryCode + digitsOnly;
+                debugPrint(
+                  '-----phoneNumbersStr: $phoneNumbersStr----- Manually added country code with validation',
+                );
+              }
               if (orgName.isEmpty ||
                   phoneNumbersStr.isEmpty ||
                   userName.isEmpty) {

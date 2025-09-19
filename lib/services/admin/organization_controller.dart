@@ -28,26 +28,65 @@ class OrganizationController extends GetxController {
     String userName,
   ) async {
     try {
-      // Create the organization document
+      // Step 1: Check for a duplicate organization.
+      final existingOrgs = await databases.listDocuments(
+        databaseId: databaseId,
+        collectionId: orgsCollectionId,
+        queries: [Query.equal('orgName', orgName)],
+      );
+
+      if (existingOrgs.documents.isNotEmpty) {
+        debugPrint('Error: An organization with this name already exists.');
+        Get.snackbar('Error', 'An organization with this name already exists.');
+        return null;
+      }
+
+      // Step 2: Create the new organization document.
       final Document orgDocument = await databases.createDocument(
         databaseId: databaseId,
         collectionId: orgsCollectionId,
-        documentId: 'unique()', // auto-generate document ID
-        data: {
-          'orgName': orgName,
-          'phoneNumbers': phoneNumbers, // storing as string; adjust if needed
-        },
+        documentId: 'unique()',
+        data: {'orgName': orgName, 'phoneNumbers': phoneNumbers},
       );
       debugPrint('Organization created successfully: ${orgDocument.$id}');
 
-      // Create a new user document with admin role linked to the organization
+      // Step 3: Check for a duplicate user for this organization.
+      // This ensures that the same user isn't created twice for the same organization.
+      final existingUsers = await databases.listDocuments(
+        databaseId: databaseId,
+        collectionId: CId.userCollectionId,
+        queries: [
+          Query.equal('phoneNumber', phoneNumbers),
+          Query.equal('organizationId', orgDocument.$id),
+        ],
+      );
+
+      if (existingUsers.documents.isNotEmpty) {
+        debugPrint(
+          'Error: This user is already an admin of this organization.',
+        );
+        Get.snackbar(
+          'Error',
+          'This user is already an admin of this organization.',
+        );
+        // Optional: you may want to delete the newly created organization if the user already exists.
+        // This is an important part of the logic, as it prevents orphan records.
+        await databases.deleteDocument(
+          databaseId: databaseId,
+          collectionId: orgsCollectionId,
+          documentId: orgDocument.$id,
+        );
+        return null;
+      }
+
+      // Step 4: Create the new user document linked to the new organization.
       final Document userDocument = await databases.createDocument(
         databaseId: databaseId,
         collectionId: CId.userCollectionId,
-        documentId: 'unique()', // auto-generate document ID
+        documentId: 'unique()',
         data: {
           'name': userName,
-          'phoneNumber': phoneNumbers, // using the same phone number for admin
+          'phoneNumber': phoneNumbers,
           'organizationId': orgDocument.$id,
           'role': 'admin',
         },
@@ -55,9 +94,11 @@ class OrganizationController extends GetxController {
       debugPrint(
         'Admin user created successfully for New Org: ${userDocument.$id}',
       );
+
       return orgDocument;
     } catch (e) {
       debugPrint('Error creating organization and admin user: $e');
+      Get.snackbar('Error', e.toString());
       return null;
     }
   }
